@@ -1,0 +1,32 @@
+{
+  "shifts" : [
+    {
+      "day": "2019-12-01",
+      "name": "ops",
+      "type": "standard"
+    },
+    {
+      "day": "2019-12-02",
+      "name": "ops",
+      "type": "standard"
+    }
+  ],
+  "people": [
+    {"name": "Admiral Ackbar"},
+    {"name": "Mon Mothma"}
+  ],
+  "max_shifts_per_person": 1,
+  "objective": "RankingWeight",
+  "constraints": [
+    {
+      "type": "EachPersonWorksAtMostXShiftsPerAssignmentPeriod",
+      "priority": 0,
+      "params": {"x":  1}
+    },
+    {
+      "type": "RespectPersonRestrictionsPerDay",
+      "priority": 1,
+      "params": {"restrictions": {"Admiral Ackbar": ["2019-12-01", "2019-12-02"]}}
+    }
+  ]
+}

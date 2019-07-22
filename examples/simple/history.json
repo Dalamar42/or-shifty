@@ -1,0 +1,12 @@
+{
+  "shifts": [
+    {"person": "Alice", "day": "2019-11-28", "name": "ops", "type": "special_a"},
+    {"person": "Bob", "day": "2019-11-27", "name": "ops", "type": "special_b"},
+    {"person": "Eve", "day": "2019-11-26", "name": "ops", "type": "standard"}
+  ],
+  "offsets": [
+    {"person": "Alice", "shift_type": "standard", "offset": 2},
+    {"person": "Alice", "shift_type": "special_b", "offset": 1},
+    {"person": "Bob", "shift_type": "standard", "offset": 1}
+  ]
+}
