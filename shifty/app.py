@@ -1,8 +1,12 @@
+import logging
 from datetime import date
 
 from ortools.sat.python import cp_model
 
-from model import Person, Shift, assign_shifts
+from .model import Person, Shift, assign_shifts
+
+
+log = logging.getLogger(__name__)
 
 
 def ops():
@@ -107,7 +111,3 @@ def nurses():
 
 def main():
     ops()
-
-
-if __name__ == "__main__":
-    main()
