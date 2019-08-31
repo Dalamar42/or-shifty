@@ -48,15 +48,15 @@ def _index_inputs(people, shifts_by_day):
     indexed_people = []
     indexed_shifts_by_day = {}
 
-    for index, person in enumerate(people):
-        indexed_people.append(Indexed(index=index, val=person))
+    for person_idx, person in enumerate(people):
+        indexed_people.append(Indexed(index=person_idx, val=person))
 
-    for index, day in enumerate(sorted(shifts_by_day.keys())):
-        day = Indexed(index=index, val=day)
+    for day_idx, day in enumerate(sorted(shifts_by_day.keys())):
+        day = Indexed(index=day_idx, val=day)
 
-        for index, shift in enumerate(shifts_by_day[day.val]):
+        for shift_idx, shift in enumerate(shifts_by_day[day.val]):
             indexed_shifts_by_day.setdefault(day, []).append(
-                Indexed(index=index, val=shift)
+                Indexed(index=shift_idx, val=shift)
             )
 
     return indexed_people, indexed_shifts_by_day
