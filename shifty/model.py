@@ -22,6 +22,29 @@ class Shift(NamedTuple):
     name: str
 
 
+def assign_shifts(input_people, input_shifts_by_day):
+    people, shifts_by_day = _index_inputs(input_people, input_shifts_by_day)
+
+    model = cp_model.CpModel()
+
+    assignments = _init_assignments(model, people, shifts_by_day)
+
+    constraints = CONSTRAINTS
+    log.info("Running model with constraints: %s", [str(c) for c in constraints])
+    for constraint in constraints:
+        constraint.apply(model, assignments, people, shifts_by_day)
+
+    solver = cp_model.CpSolver()
+    solver.Solve(model)
+
+    for day, shifts in shifts_by_day.items():
+        for shift in shifts:
+            for person in people:
+                index = (person.index, day.index, shift.index)
+                if solver.Value(assignments[index]) == 1:
+                    yield person.val, day.val, shift.val
+
+
 def _index_inputs(people, shifts_by_day):
     indexed_people = []
     indexed_shifts_by_day = {}
@@ -40,30 +63,7 @@ def _index_inputs(people, shifts_by_day):
     return indexed_people, indexed_shifts_by_day
 
 
-def assign_shifts(input_people, input_shifts_by_day):
-    people, shifts_by_day = _index_inputs(input_people, input_shifts_by_day)
-
-    model = cp_model.CpModel()
-
-    assignments = init_assignments(model, people, shifts_by_day)
-
-    constraints = CONSTRAINTS
-    log.info("Running model with constraints: %s", [str(c) for c in constraints])
-    for constraint in constraints:
-        constraint.apply(model, assignments, people, shifts_by_day)
-
-    solver = cp_model.CpSolver()
-    solver.Solve(model)
-
-    for day, shifts in shifts_by_day.items():
-        for shift in shifts:
-            for person in people:
-                index = (person.index, day.index, shift.index)
-                if solver.Value(assignments[index]) == 1:
-                    yield person.val, day.val, shift.val
-
-
-def init_assignments(model, people, shifts_by_day):
+def _init_assignments(model, people, shifts_by_day):
     assignments = {}
     for person in people:
         for day, shifts in shifts_by_day.items():
