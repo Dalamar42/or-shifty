@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from typing import List
 
 from shifty.data import History, Person, ShiftType
@@ -43,3 +43,44 @@ def _days_since_last_on_shift_for_type(
             people_seen.add(past_shift.person)
             days_since[past_shift.person] = (now - past_shift.day).days
     return days_since
+
+
+def free_days_of_type_since_last_on_shift(
+    history: History, people: List[Person], now: date
+):
+    return {
+        shift_type: _free_days_of_type_since_last_on_shift_for_type(
+            history, people, now, shift_type
+        )
+        for shift_type in ShiftType
+    }
+
+
+def _free_days_of_type_since_last_on_shift_for_type(
+    history: History, people: List[Person], now: date, shift_type: ShiftType
+):
+    people_seen = set()
+    free_since = {person: None for person in people}
+    for past_shift in history.past_shifts:
+        if (
+            past_shift.counts_as(shift_type)
+            and past_shift.person in free_since
+            and past_shift.person not in people_seen
+        ):
+            people_seen.add(past_shift.person)
+
+            from_date = past_shift.day + timedelta(days=1)
+            day_gen = (
+                from_date + timedelta(x + 1) for x in range((now - from_date).days)
+            )
+            if shift_type is ShiftType.NORMAL:
+                day_filter = lambda day: day.weekday() < 5
+            elif shift_type is ShiftType.SATURDAY:
+                day_filter = lambda day: day.weekday() == 5
+            elif shift_type is ShiftType.SUNDAY:
+                day_filter = lambda day: day.weekday() == 6
+            else:
+                assert False, shift_type
+
+            free_since[past_shift.person] = sum(1 for day in day_gen if day_filter(day))
+    return free_since
