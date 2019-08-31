@@ -1,6 +1,7 @@
 from datetime import date
 
-from shifty.model import Person, Shift, assign_shifts
+from shifty.data import Person, Shift
+from shifty.model import assign_shifts
 
 
 def test_basic_assignment():

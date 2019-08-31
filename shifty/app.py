@@ -1,7 +1,8 @@
 import logging
 from datetime import date
 
-from .model import Person, Shift, assign_shifts
+from .data import Person, Shift
+from .model import assign_shifts
 
 log = logging.getLogger(__name__)
 

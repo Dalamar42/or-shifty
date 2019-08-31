@@ -13,14 +13,6 @@ class Indexed(NamedTuple):
     val: Any
 
 
-class Person(NamedTuple):
-    name: str
-
-
-class Shift(NamedTuple):
-    name: str
-
-
 def assign_shifts(input_people, input_shifts_by_day):
     people, shifts_by_day = _index_inputs(input_people, input_shifts_by_day)
 
