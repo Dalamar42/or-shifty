@@ -6,14 +6,14 @@ from shifty.data import History, Person, ShiftType
 
 class HistoryMetrics(NamedTuple):
     num_of_shifts: Dict[ShiftType, Dict[Person, int]]
-    days_since_last_on_shift: Dict[ShiftType, Dict[Person, int]]
+    date_last_on_shift: Dict[Person, date]
     free_days_of_shift_type_since_last_on_shift: Dict[ShiftType, Dict[Person, int]]
 
     @classmethod
     def build(cls, history: History, people: List[Person], now: date):
         return cls(
             num_of_shifts=_num_of_shifts(history, people),
-            days_since_last_on_shift=_days_since_last_on_shift(history, people, now),
+            date_last_on_shift=_date_last_on_shift(history, people),
             free_days_of_shift_type_since_last_on_shift=_free_days_of_type_since_last_on_shift(
                 history, people, now
             ),
@@ -38,27 +38,14 @@ def _num_of_shifts_for_type(
     return shifts
 
 
-def _days_since_last_on_shift(history: History, people: List[Person], now: date):
-    return {
-        shift_type: _days_since_last_on_shift_for_type(history, people, now, shift_type)
-        for shift_type in ShiftType
-    }
-
-
-def _days_since_last_on_shift_for_type(
-    history: History, people: List[Person], now: date, shift_type: ShiftType
-):
+def _date_last_on_shift(history: History, people: List[Person]):
     people_seen = set()
-    days_since = {person: None for person in people}
+    date_last = {person: None for person in people}
     for past_shift in history.past_shifts:
-        if (
-            past_shift.counts_as(shift_type)
-            and past_shift.person in days_since
-            and past_shift.person not in people_seen
-        ):
+        if past_shift.person in date_last and past_shift.person not in people_seen:
             people_seen.add(past_shift.person)
-            days_since[past_shift.person] = (now - past_shift.day).days
-    return days_since
+            date_last[past_shift.person] = past_shift.day
+    return date_last
 
 
 def _free_days_of_type_since_last_on_shift(

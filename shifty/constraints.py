@@ -45,8 +45,24 @@ def _each_person_works_at_most_one_shift_per_day(model, assignments, data):
         )
 
 
+def _there_should_be_at_least_x_days_between_ops(model, assignments, data):
+    for day, shifts in data.shifts_by_day.items():
+        for person in data.people:
+            date_last_on_shift = data.history_metrics.date_last_on_shift[person.val]
+
+            if date_last_on_shift is None:
+                continue
+
+            if (day - date_last_on_shift).days >= data.config.min_days_between_ops:
+                continue
+
+            for shift in shifts:
+                model.Add(assignments[(person.index, day.index, shift.index)] == 0)
+
+
 CONSTRAINTS = [
     Constraint.build(fn=_each_shift_is_assigned_to_exactly_one_person, priority=0),
     Constraint.build(fn=_each_person_works_at_most_one_shift_per_day, priority=0),
+    Constraint.build(fn=_there_should_be_at_least_x_days_between_ops, priority=1),
 ]
 assert CONSTRAINTS == sorted(CONSTRAINTS, key=lambda c: c.priority)

@@ -33,10 +33,11 @@ def test_num_of_shifts():
     }
 
 
-def test_days_since_last_on_shift():
+def test_date_last_on_shift():
     person_a = Person("a")
     person_b = Person("b")
     person_c = Person("c")
+    person_d = Person("d")
 
     history = History.build(
         [
@@ -53,12 +54,14 @@ def test_days_since_last_on_shift():
         ]
     )
 
-    metrics = HistoryMetrics.build(history, [person_a, person_b], date(2019, 9, 8))
+    metrics = HistoryMetrics.build(
+        history, [person_a, person_b, person_d], date(2019, 9, 8)
+    )
 
-    assert metrics.days_since_last_on_shift == {
-        ShiftType.NORMAL: {person_a: None, person_b: 5},
-        ShiftType.SATURDAY: {person_a: 4, person_b: None},
-        ShiftType.SUNDAY: {person_a: 6, person_b: 7},
+    assert metrics.date_last_on_shift == {
+        person_a: date(2019, 9, 4),
+        person_b: date(2019, 9, 3),
+        person_d: None,
     }
 
 
