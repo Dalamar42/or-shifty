@@ -31,7 +31,7 @@ def _run(data, constraints):
     assignments = _init_assignments(model, data.people, data.shifts_by_day)
 
     for constraint in constraints:
-        constraint.apply(model, assignments, data.people, data.shifts_by_day)
+        constraint.apply(model, assignments, data)
 
     solver = cp_model.CpSolver()
     solver.Solve(model)
