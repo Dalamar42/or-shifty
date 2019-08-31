@@ -2,13 +2,7 @@ from datetime import date
 from enum import Enum, auto
 from typing import List, NamedTuple, Tuple
 
-
-class Person(NamedTuple):
-    name: str
-
-
-class Shift(NamedTuple):
-    name: str
+from . import Person, Shift
 
 
 class ShiftType(Enum):
