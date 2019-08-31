@@ -1,11 +1,7 @@
 from datetime import date
 
 from shifty.data import History, PastShift, Person, Shift, ShiftType
-from shifty.history_metrics import (
-    days_since_last_on_shift,
-    free_days_of_type_since_last_on_shift,
-    num_of_shifts,
-)
+from shifty.history import HistoryMetrics
 
 
 def test_num_of_shifts():
@@ -28,9 +24,9 @@ def test_num_of_shifts():
         ]
     )
 
-    shifts = num_of_shifts(history, [person_a, person_b])
+    metrics = HistoryMetrics.build(history, [person_a, person_b], date(2019, 9, 5))
 
-    assert shifts == {
+    assert metrics.num_of_shifts == {
         ShiftType.NORMAL: {person_a: 0, person_b: 1},
         ShiftType.SATURDAY: {person_a: 2, person_b: 0},
         ShiftType.SUNDAY: {person_a: 1, person_b: 1},
@@ -57,11 +53,9 @@ def test_days_since_last_on_shift():
         ]
     )
 
-    now = date(2019, 9, 8)
+    metrics = HistoryMetrics.build(history, [person_a, person_b], date(2019, 9, 8))
 
-    days_since = days_since_last_on_shift(history, [person_a, person_b], now)
-
-    assert days_since == {
+    assert metrics.days_since_last_on_shift == {
         ShiftType.NORMAL: {person_a: None, person_b: 5},
         ShiftType.SATURDAY: {person_a: 4, person_b: None},
         ShiftType.SUNDAY: {person_a: 6, person_b: 7},
@@ -82,14 +76,9 @@ def test_free_days_of_type_since_last_on_shift():
             PastShift.build(person_c, date(2019, 9, 8), Shift("shift")),  # Sun
         ]
     )
+    metrics = HistoryMetrics.build(history, [person_a, person_b], date(2019, 9, 16))
 
-    now = date(2019, 9, 16)
-
-    free_since = free_days_of_type_since_last_on_shift(
-        history, [person_a, person_b], now
-    )
-
-    assert free_since == {
+    assert metrics.free_days_of_shift_type_since_last_on_shift == {
         ShiftType.NORMAL: {person_a: 9, person_b: None},
         ShiftType.SATURDAY: {person_a: 2, person_b: 1},
         ShiftType.SUNDAY: {person_a: None, person_b: 2},

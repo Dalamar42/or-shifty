@@ -1,10 +1,26 @@
 from datetime import date, timedelta
-from typing import List
+from typing import Dict, List, NamedTuple
 
 from shifty.data import History, Person, ShiftType
 
 
-def num_of_shifts(history: History, people: List[Person]):
+class HistoryMetrics(NamedTuple):
+    num_of_shifts: Dict[ShiftType, Dict[Person, int]]
+    days_since_last_on_shift: Dict[ShiftType, Dict[Person, int]]
+    free_days_of_shift_type_since_last_on_shift: Dict[ShiftType, Dict[Person, int]]
+
+    @classmethod
+    def build(cls, history: History, people: List[Person], now: date):
+        return cls(
+            num_of_shifts=_num_of_shifts(history, people),
+            days_since_last_on_shift=_days_since_last_on_shift(history, people, now),
+            free_days_of_shift_type_since_last_on_shift=_free_days_of_type_since_last_on_shift(
+                history, people, now
+            ),
+        )
+
+
+def _num_of_shifts(history: History, people: List[Person]):
     return {
         shift_type: _num_of_shifts_for_type(history, people, shift_type)
         for shift_type in ShiftType
@@ -22,7 +38,7 @@ def _num_of_shifts_for_type(
     return shifts
 
 
-def days_since_last_on_shift(history: History, people: List[Person], now: date):
+def _days_since_last_on_shift(history: History, people: List[Person], now: date):
     return {
         shift_type: _days_since_last_on_shift_for_type(history, people, now, shift_type)
         for shift_type in ShiftType
@@ -45,7 +61,7 @@ def _days_since_last_on_shift_for_type(
     return days_since
 
 
-def free_days_of_type_since_last_on_shift(
+def _free_days_of_type_since_last_on_shift(
     history: History, people: List[Person], now: date
 ):
     return {
