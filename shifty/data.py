@@ -1,6 +1,6 @@
 from datetime import date
 from enum import Enum, auto
-from typing import NamedTuple, Tuple, List
+from typing import List, NamedTuple, Tuple
 
 
 class Person(NamedTuple):
@@ -26,12 +26,7 @@ class PastShift(NamedTuple):
 
     @classmethod
     def build(
-        cls,
-        person,
-        day,
-        shift,
-        override_as_saturday=False,
-        override_as_sunday=False,
+        cls, person, day, shift, override_as_saturday=False, override_as_sunday=False
     ):
         return cls(
             person=person,
