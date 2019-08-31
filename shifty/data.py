@@ -53,5 +53,5 @@ class History(NamedTuple):
 
     @classmethod
     def build(cls, past_shifts: List[PastShift]):
-        past_shifts = sorted(past_shifts, key=lambda ps: ps.day)
+        past_shifts = sorted(past_shifts, key=lambda ps: ps.day, reverse=True)
         return cls(past_shifts=tuple(past_shifts))
