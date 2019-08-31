@@ -1,12 +1,9 @@
-import logging
 from datetime import date
 
-from .model import Person, Shift, assign_shifts
-
-log = logging.getLogger(__name__)
+from shifty.model import Person, Shift, assign_shifts
 
 
-def ops():
+def test_basic_assignment():
     solution = assign_shifts(
         [Person(name=f"person_{index}") for index in range(7)],
         {
@@ -19,11 +16,4 @@ def ops():
             date(2019, 1, 7): [Shift(name="shift")],
         },
     )
-
-    for person, day, shift in solution:
-        print(f"{person.name} works {day}/{shift.name}")
-    print()
-
-
-def main():
-    ops()
+    assert len(list(solution)) == 7

@@ -5,7 +5,6 @@ from ortools.sat.python import cp_model
 
 from .constraints import CONSTRAINTS
 
-
 log = logging.getLogger(__name__)
 
 
