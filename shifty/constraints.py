@@ -78,7 +78,7 @@ class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
                 if date_last_on_shift is None:
                     continue
 
-                if (day - date_last_on_shift).days >= data.config.min_days_between_ops:
+                if (day.val - date_last_on_shift).days >= data.config.min_days_between_ops:
                     continue
 
                 for shift in shifts:
