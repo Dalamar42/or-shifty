@@ -1,68 +1,73 @@
-from typing import Any, Dict, NamedTuple
+from abc import ABCMeta, abstractmethod
+from typing import Dict
 
 from ortools.sat.python.cp_model import CpModel, IntVar
 
 from .data import RunData
 
 
-class Constraint(NamedTuple):
-    name: str
-    fn: Any
-    priority: int  # lower is higher
-
-    @classmethod
-    def build(cls, fn, priority):
-        return cls(name=fn.__name__[1:], fn=fn, priority=priority)
+class Constraint(metaclass=ABCMeta):
+    def __init__(self, priority: int):
+        self._name = self.__class__.__name__
+        self._priority = priority  # lower is higher
 
     def __str__(self):
-        return self.name
+        return self._name
 
+    @property
+    def priority(self):
+        return self._priority
+
+    @abstractmethod
     def apply(self, model: CpModel, assignments: Dict[int, IntVar], data: RunData):
-        self.fn(model, assignments, data)
+        pass
 
 
-def _each_shift_is_assigned_to_exactly_one_person(model, assignments, data):
-    for day, shifts in data.shifts_by_day.items():
-        for shift in shifts:
+class EachShiftIsAssignedToExactlyOnePerson(Constraint):
+    def apply(self, model: CpModel, assignments: Dict[int, IntVar], data: RunData):
+        for day, shifts in data.shifts_by_day.items():
+            for shift in shifts:
+                model.Add(
+                    sum(
+                        assignments[(person.index, day.index, shift.index)]
+                        for person in data.people
+                    )
+                    == 1
+                )
+
+
+class EachPersonWorksAtMostOneShiftPerDay(Constraint):
+    def apply(self, model: CpModel, assignments: Dict[int, IntVar], data: RunData):
+        for person in data.people:
             model.Add(
                 sum(
                     assignments[(person.index, day.index, shift.index)]
-                    for person in data.people
+                    for day, shifts in data.shifts_by_day.items()
+                    for shift in shifts
                 )
-                == 1
+                <= 1
             )
 
 
-def _each_person_works_at_most_one_shift_per_day(model, assignments, data):
-    for person in data.people:
-        model.Add(
-            sum(
-                assignments[(person.index, day.index, shift.index)]
-                for day, shifts in data.shifts_by_day.items()
-                for shift in shifts
-            )
-            <= 1
-        )
+class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
+    def apply(self, model: CpModel, assignments: Dict[int, IntVar], data: RunData):
+        for day, shifts in data.shifts_by_day.items():
+            for person in data.people:
+                date_last_on_shift = data.history_metrics.date_last_on_shift[person.val]
 
+                if date_last_on_shift is None:
+                    continue
 
-def _there_should_be_at_least_x_days_between_ops(model, assignments, data):
-    for day, shifts in data.shifts_by_day.items():
-        for person in data.people:
-            date_last_on_shift = data.history_metrics.date_last_on_shift[person.val]
+                if (day - date_last_on_shift).days >= data.config.min_days_between_ops:
+                    continue
 
-            if date_last_on_shift is None:
-                continue
-
-            if (day - date_last_on_shift).days >= data.config.min_days_between_ops:
-                continue
-
-            for shift in shifts:
-                model.Add(assignments[(person.index, day.index, shift.index)] == 0)
+                for shift in shifts:
+                    model.Add(assignments[(person.index, day.index, shift.index)] == 0)
 
 
 CONSTRAINTS = [
-    Constraint.build(fn=_each_shift_is_assigned_to_exactly_one_person, priority=0),
-    Constraint.build(fn=_each_person_works_at_most_one_shift_per_day, priority=0),
-    Constraint.build(fn=_there_should_be_at_least_x_days_between_ops, priority=1),
+    EachShiftIsAssignedToExactlyOnePerson(priority=0),
+    EachPersonWorksAtMostOneShiftPerDay(priority=0),
+    ThereShouldBeAtLeastXDaysBetweenOps(priority=1),
 ]
 assert CONSTRAINTS == sorted(CONSTRAINTS, key=lambda c: c.priority)
