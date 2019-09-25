@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict
+from typing import Dict, Tuple
 
 from ortools.sat.python.cp_model import CpModel, IntVar
 
@@ -19,12 +19,22 @@ class Constraint(metaclass=ABCMeta):
         return self._priority
 
     @abstractmethod
-    def apply(self, model: CpModel, assignments: Dict[int, IntVar], data: RunData):
+    def apply(
+        self,
+        model: CpModel,
+        assignments: Dict[Tuple[int, int, int], IntVar],
+        data: RunData,
+    ):
         pass
 
 
 class EachShiftIsAssignedToExactlyOnePerson(Constraint):
-    def apply(self, model: CpModel, assignments: Dict[int, IntVar], data: RunData):
+    def apply(
+        self,
+        model: CpModel,
+        assignments: Dict[Tuple[int, int, int], IntVar],
+        data: RunData,
+    ):
         for day, shifts in data.shifts_by_day.items():
             for shift in shifts:
                 model.Add(
@@ -37,7 +47,12 @@ class EachShiftIsAssignedToExactlyOnePerson(Constraint):
 
 
 class EachPersonWorksAtMostOneShiftPerDay(Constraint):
-    def apply(self, model: CpModel, assignments: Dict[int, IntVar], data: RunData):
+    def apply(
+        self,
+        model: CpModel,
+        assignments: Dict[Tuple[int, int, int], IntVar],
+        data: RunData,
+    ):
         for person in data.people:
             model.Add(
                 sum(
@@ -50,7 +65,12 @@ class EachPersonWorksAtMostOneShiftPerDay(Constraint):
 
 
 class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
-    def apply(self, model: CpModel, assignments: Dict[int, IntVar], data: RunData):
+    def apply(
+        self,
+        model: CpModel,
+        assignments: Dict[Tuple[int, int, int], IntVar],
+        data: RunData,
+    ):
         for day, shifts in data.shifts_by_day.items():
             for person in data.people:
                 date_last_on_shift = data.history_metrics.date_last_on_shift[person.val]
