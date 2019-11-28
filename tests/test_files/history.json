@@ -1,0 +1,10 @@
+{
+  "shifts": [
+    {"person": "Admiral Ackbar", "date": "2019-11-28", "shift": "ops"},
+    {"person": "Admiral Ackbar", "date": "2019-11-27", "shift": "ops"},
+    {"person": "Admiral Ackbar", "date": "2019-11-26", "shift": "ops"},
+    {"person": "Mon Mothma", "date": "2019-11-25", "shift": "ops"},
+    {"person": "Mon Mothma", "date": "2019-11-24", "shift": "ops"},
+    {"person": "Admiral Ackbar", "date": "2019-11-23", "shift": "ops"}
+  ]
+}

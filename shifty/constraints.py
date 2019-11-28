@@ -27,6 +27,13 @@ class Constraint(metaclass=ABCMeta):
     ):
         pass
 
+    def __eq__(self, other):
+        if other is None:
+            return False
+        if type(self) != type(other):
+            return False
+        return self.priority == other.priority
+
 
 class EachShiftIsAssignedToExactlyOnePerson(Constraint):
     def apply(
@@ -65,6 +72,11 @@ class EachPersonWorksAtMostOneShiftPerDay(Constraint):
 
 
 class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
+    def __init__(self, x=None, **kwargs):
+        super().__init__(**kwargs)
+        assert x is not None
+        self._x = x
+
     def apply(
         self,
         model: CpModel,
@@ -78,16 +90,23 @@ class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
                 if date_last_on_shift is None:
                     continue
 
-                if (day.val - date_last_on_shift).days >= data.config.min_days_between_ops:
+                if (day.val - date_last_on_shift).days >= self._x:
                     continue
 
                 for shift in shifts:
                     model.Add(assignments[(person.index, day.index, shift.index)] == 0)
 
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        return self._x == other._x
 
-CONSTRAINTS = [
-    EachShiftIsAssignedToExactlyOnePerson(priority=0),
-    EachPersonWorksAtMostOneShiftPerDay(priority=0),
-    ThereShouldBeAtLeastXDaysBetweenOps(priority=1),
-]
-assert CONSTRAINTS == sorted(CONSTRAINTS, key=lambda c: c.priority)
+
+CONSTRAINTS = {
+    constraint.__name__: constraint
+    for constraint in [
+        EachShiftIsAssignedToExactlyOnePerson,
+        EachPersonWorksAtMostOneShiftPerDay,
+        ThereShouldBeAtLeastXDaysBetweenOps,
+    ]
+}

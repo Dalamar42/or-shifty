@@ -1,7 +1,7 @@
 from datetime import date
 from typing import NamedTuple, List, Dict
 
-from . import Config, Shift, Person, History
+from . import Shift, Person, History
 from shifty.history import HistoryMetrics
 
 
@@ -23,16 +23,14 @@ class IndexedShift(NamedTuple):
 class RunData(NamedTuple):
     people: List[IndexedPerson]
     shifts_by_day: Dict[IndexedDay, List[IndexedShift]]
-    config: Config
     history: History
     history_metrics: HistoryMetrics
 
     @classmethod
-    def build(cls, people, shifts_by_day, config, history, now):
+    def build(cls, people, shifts_by_day, history, now):
         return cls(
             people=cls._index_people(people),
             shifts_by_day=cls._index_shifts_by_day(shifts_by_day),
-            config=config,
             history=history,
             history_metrics=HistoryMetrics.build(history, people, now),
         )

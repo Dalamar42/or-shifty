@@ -4,8 +4,8 @@ from typing import Dict, List
 
 from ortools.sat.python import cp_model
 
-from .constraints import CONSTRAINTS, Constraint
-from .data import Config, History, Person, RunData, Shift
+from .constraints import Constraint
+from .data import History, Person, RunData, Shift
 
 log = logging.getLogger(__name__)
 
@@ -13,13 +13,13 @@ log = logging.getLogger(__name__)
 def assign(
     people: List[Person],
     shifts_by_day: Dict[date, List[Shift]],
-    config: Config = Config.build(),
     history: History = History.build(),
     now: date = None,
-    constraints: List[Constraint] = CONSTRAINTS,
+    constraints: List[Constraint] = tuple(),
 ):
+    assert list(constraints) == sorted(constraints, key=lambda c: c.priority)
     now = now or date.today()
-    data = RunData.build(people, shifts_by_day, config, history, now)
+    data = RunData.build(people, shifts_by_day, history, now)
     return _run(data, constraints)
 
 

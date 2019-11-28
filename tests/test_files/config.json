@@ -1,0 +1,24 @@
+{
+  "people": [
+    {"name": "Admiral Ackbar"},
+    {"name": "Mon Mothma"}
+  ],
+  "shifts": [
+    {"name": "ops"}
+  ],
+  "constraints": [
+    {
+      "name": "EachShiftIsAssignedToExactlyOnePerson",
+      "priority": 0
+    },
+    {
+      "name": "EachPersonWorksAtMostOneShiftPerDay",
+      "priority": 0
+    },
+    {
+      "name": "ThereShouldBeAtLeastXDaysBetweenOps",
+      "priority": 1,
+      "params": {"x":  4}
+    }
+  ]
+}
