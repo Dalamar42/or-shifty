@@ -8,6 +8,7 @@ from pytest import fixture
 from shifty.constraints import (
     EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
     EachShiftIsAssignedToExactlyOnePerson,
+    RespectPersonPermissionsPerShiftType,
     ThereShouldBeAtLeastXDaysBetweenOps,
     ThereShouldBeAtLeastXWeekendsBetweenWeekendOps,
 )
@@ -187,7 +188,7 @@ def test_there_should_be_at_least_x_days_between_ops(
 
 
 def test_there_should_be_at_least_x_weekends_between_weekend_ops(
-    model, build_run_data, build_expressions, people, days, shifts
+    model, build_run_data, build_expressions, people, shifts
 ):
     constraint = ThereShouldBeAtLeastXWeekendsBetweenWeekendOps(priority=0, x=1)
 
@@ -208,3 +209,24 @@ def test_there_should_be_at_least_x_weekends_between_weekend_ops(
     # First person has just been on a weekend ops
     assert not evaluate(assignments, ((data.people[0].index, 4, 0),), expressions)
     assert not evaluate(assignments, ((data.people[0].index, 5, 0),), expressions)
+
+
+def test_respect_person_permissions_per_shift_type(
+    model, build_run_data, build_expressions
+):
+    data = build_run_data()
+
+    constraint = RespectPersonPermissionsPerShiftType(
+        priority=0, forbidden_by_shift_type={"SATURDAY": [data.people[0].val.name]}
+    )
+
+    assignments = init_assignments(model, data.people, data.shifts_by_day)
+    expressions = build_expressions(constraint, data, assignments)
+
+    # Second person can be assigned to both Sat and Sun
+    assert evaluate(assignments, ((data.people[1].index, 4, 0),), expressions)
+    assert evaluate(assignments, ((data.people[1].index, 5, 0),), expressions)
+
+    # First person can be assigned to Sun, but not Sat
+    assert not evaluate(assignments, ((data.people[0].index, 4, 0),), expressions)
+    assert evaluate(assignments, ((data.people[0].index, 5, 0),), expressions)

@@ -19,6 +19,11 @@
       "name": "ThereShouldBeAtLeastXDaysBetweenOps",
       "priority": 1,
       "params": {"x":  4}
+    },
+    {
+      "name": "RespectPersonPermissionsPerShiftType",
+      "priority": 2,
+      "params": {"forbidden_by_shift_type": {"SATURDAY": ["Admiral Ackbar"]}}
     }
   ]
 }

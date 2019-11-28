@@ -4,6 +4,7 @@ from shifty.cli import parse_args
 from shifty.constraints import (
     EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
     EachShiftIsAssignedToExactlyOnePerson,
+    RespectPersonPermissionsPerShiftType,
     ThereShouldBeAtLeastXDaysBetweenOps,
 )
 from shifty.data import PastShift, Person, Shift
@@ -41,6 +42,9 @@ def test_parsing_inputs():
         EachShiftIsAssignedToExactlyOnePerson(priority=0),
         EachPersonWorksAtMostOneShiftPerAssignmentPeriod(priority=0),
         ThereShouldBeAtLeastXDaysBetweenOps(priority=1, x=4),
+        RespectPersonPermissionsPerShiftType(
+            priority=2, forbidden_by_shift_type={"SATURDAY": ["Admiral Ackbar"]}
+        ),
     ]
     assert inputs.history.past_shifts == (
         PastShift.build(Person("Admiral Ackbar"), date(2019, 11, 28), Shift("ops")),

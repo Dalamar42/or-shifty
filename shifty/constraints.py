@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Generator, Tuple
+from typing import Dict, Generator, List, Tuple
 
 from ortools.sat.python.cp_model import IntVar, LinearExpr
 
@@ -133,6 +133,38 @@ class ThereShouldBeAtLeastXWeekendsBetweenWeekendOps(Constraint):
         return self._x == other._x
 
 
+class RespectPersonPermissionsPerShiftType(Constraint):
+    def __init__(self, forbidden_by_shift_type: Dict[str, List[str]] = None, **kwargs):
+        super().__init__(**kwargs)
+        assert forbidden_by_shift_type is not None
+        self._forbidden_by_shift_type = {
+            ShiftType[shift_type]: set(names)
+            for shift_type, names in forbidden_by_shift_type.items()
+        }
+
+    def generate(
+        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+    ) -> Generator[LinearExpr, None, None]:
+        for day, shifts in data.shifts_by_day.items():
+            for person in data.people:
+                if day.val.weekday() == 5 and person.val.name in self._forbidden_by_shift_type.get(
+                    ShiftType.SATURDAY, set()
+                ):
+                    for shift in shifts:
+                        yield assignments[(person.index, day.index, shift.index)] == 0
+
+                if day.val.weekday() == 6 and person.val.name in self._forbidden_by_shift_type.get(
+                    ShiftType.SUNDAY, set()
+                ):
+                    for shift in shifts:
+                        yield assignments[(person.index, day.index, shift.index)] == 0
+
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        return self._forbidden_by_shift_type == other._forbidden_by_shift_type
+
+
 CONSTRAINTS = {
     constraint.__name__: constraint
     for constraint in [
@@ -140,5 +172,6 @@ CONSTRAINTS = {
         EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
         ThereShouldBeAtLeastXDaysBetweenOps,
         ThereShouldBeAtLeastXWeekendsBetweenWeekendOps,
+        RespectPersonPermissionsPerShiftType,
     ]
 }
