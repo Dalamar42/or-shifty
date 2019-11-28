@@ -9,3 +9,5 @@
 - [ ] Support history offsets for new joiners
 - [X] Support people's preferences for specific shifts
 - [X] Support holidays constraint
+- [ ] Print violated constraints when making a decision
+- [ ] Print stats when making a decision
