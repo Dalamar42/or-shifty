@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Tuple
+from typing import Dict, Generator, Tuple
 
-from ortools.sat.python.cp_model import CpModel, IntVar
+from ortools.sat.python.cp_model import IntVar, LinearExpr
 
 from .data import RunData
 
@@ -19,13 +19,10 @@ class Constraint(metaclass=ABCMeta):
         return self._priority
 
     @abstractmethod
-    def apply(
-        self,
-        model: CpModel,
-        assignments: Dict[Tuple[int, int, int], IntVar],
-        data: RunData,
-    ):
-        pass
+    def generate(
+        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+    ) -> Generator[LinearExpr, None, None]:
+        yield from ()
 
     def __eq__(self, other):
         if other is None:
@@ -36,15 +33,12 @@ class Constraint(metaclass=ABCMeta):
 
 
 class EachShiftIsAssignedToExactlyOnePerson(Constraint):
-    def apply(
-        self,
-        model: CpModel,
-        assignments: Dict[Tuple[int, int, int], IntVar],
-        data: RunData,
-    ):
+    def generate(
+        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+    ) -> Generator[LinearExpr, None, None]:
         for day, shifts in data.shifts_by_day.items():
             for shift in shifts:
-                model.Add(
+                yield (
                     sum(
                         assignments[(person.index, day.index, shift.index)]
                         for person in data.people
@@ -53,15 +47,12 @@ class EachShiftIsAssignedToExactlyOnePerson(Constraint):
                 )
 
 
-class EachPersonWorksAtMostOneShiftPerDay(Constraint):
-    def apply(
-        self,
-        model: CpModel,
-        assignments: Dict[Tuple[int, int, int], IntVar],
-        data: RunData,
-    ):
+class EachPersonWorksAtMostOneShiftPerAssignmentPeriod(Constraint):
+    def generate(
+        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+    ) -> Generator[LinearExpr, None, None]:
         for person in data.people:
-            model.Add(
+            yield (
                 sum(
                     assignments[(person.index, day.index, shift.index)]
                     for day, shifts in data.shifts_by_day.items()
@@ -77,12 +68,9 @@ class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
         assert x is not None
         self._x = x
 
-    def apply(
-        self,
-        model: CpModel,
-        assignments: Dict[Tuple[int, int, int], IntVar],
-        data: RunData,
-    ):
+    def generate(
+        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+    ) -> Generator[LinearExpr, None, None]:
         for day, shifts in data.shifts_by_day.items():
             for person in data.people:
                 date_last_on_shift = data.history_metrics.date_last_on_shift[person.val]
@@ -94,7 +82,7 @@ class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
                     continue
 
                 for shift in shifts:
-                    model.Add(assignments[(person.index, day.index, shift.index)] == 0)
+                    yield assignments[(person.index, day.index, shift.index)] == 0
 
     def __eq__(self, other):
         if not super().__eq__(other):
@@ -106,7 +94,7 @@ CONSTRAINTS = {
     constraint.__name__: constraint
     for constraint in [
         EachShiftIsAssignedToExactlyOnePerson,
-        EachPersonWorksAtMostOneShiftPerDay,
+        EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
         ThereShouldBeAtLeastXDaysBetweenOps,
     ]
 }

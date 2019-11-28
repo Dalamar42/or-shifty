@@ -1,7 +1,7 @@
 from datetime import date
 
 from shifty.constraints import (
-    EachPersonWorksAtMostOneShiftPerDay,
+    EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
     EachShiftIsAssignedToExactlyOnePerson,
     ThereShouldBeAtLeastXDaysBetweenOps,
 )
@@ -23,7 +23,7 @@ def test_basic_assignment():
         },
         constraints=[
             EachShiftIsAssignedToExactlyOnePerson(priority=0),
-            EachPersonWorksAtMostOneShiftPerDay(priority=0),
+            EachPersonWorksAtMostOneShiftPerAssignmentPeriod(priority=0),
             ThereShouldBeAtLeastXDaysBetweenOps(priority=1, x=4),
         ],
     )

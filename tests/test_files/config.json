@@ -12,7 +12,7 @@
       "priority": 0
     },
     {
-      "name": "EachPersonWorksAtMostOneShiftPerDay",
+      "name": "EachPersonWorksAtMostOneShiftPerAssignmentPeriod",
       "priority": 0
     },
     {

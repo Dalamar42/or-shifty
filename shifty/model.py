@@ -28,10 +28,11 @@ def _run(data, constraints):
 
     model = cp_model.CpModel()
 
-    assignments = _init_assignments(model, data.people, data.shifts_by_day)
+    assignments = init_assignments(model, data.people, data.shifts_by_day)
 
     for constraint in constraints:
-        constraint.apply(model, assignments, data)
+        for expression in constraint.generate(assignments, data):
+            model.Add(expression)
 
     solver = cp_model.CpSolver()
     solver.Solve(model)
@@ -39,7 +40,7 @@ def _run(data, constraints):
     return list(_solution(solver, data.people, data.shifts_by_day, assignments))
 
 
-def _init_assignments(model, people, shifts_by_day):
+def init_assignments(model, people, shifts_by_day):
     assignments = {}
     for person in people:
         for day, shifts in shifts_by_day.items():

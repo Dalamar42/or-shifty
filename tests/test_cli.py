@@ -2,7 +2,7 @@ from datetime import date
 
 from shifty.cli import parse_args
 from shifty.constraints import (
-    EachPersonWorksAtMostOneShiftPerDay,
+    EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
     EachShiftIsAssignedToExactlyOnePerson,
     ThereShouldBeAtLeastXDaysBetweenOps,
 )
@@ -39,7 +39,7 @@ def test_parsing_inputs():
     }
     assert inputs.constraints == [
         EachShiftIsAssignedToExactlyOnePerson(priority=0),
-        EachPersonWorksAtMostOneShiftPerDay(priority=0),
+        EachPersonWorksAtMostOneShiftPerAssignmentPeriod(priority=0),
         ThereShouldBeAtLeastXDaysBetweenOps(priority=1, x=4),
     ]
     assert inputs.history.past_shifts == (
