@@ -3,6 +3,8 @@ from typing import Dict, Generator, Tuple
 
 from ortools.sat.python.cp_model import IntVar, LinearExpr
 
+from shifty.data import ShiftType
+
 from .data import RunData
 
 
@@ -92,11 +94,51 @@ class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
         return self._x == other._x
 
 
+class ThereShouldBeAtLeastXWeekendsBetweenWeekendOps(Constraint):
+    def __init__(self, x=None, **kwargs):
+        super().__init__(**kwargs)
+        assert x is not None
+        self._x = x
+
+    def generate(
+        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+    ) -> Generator[LinearExpr, None, None]:
+        for day, shifts in data.shifts_by_day.items():
+            is_weekend = day.val.weekday() in {5, 6}
+            if not is_weekend:
+                continue
+
+            for person in data.people:
+                sats_since_last = data.history_metrics.free_days_of_shift_type_since_last_on_shift.get(
+                    ShiftType.SATURDAY, {}
+                ).get(
+                    person.val
+                )
+
+                suns_since_last = data.history_metrics.free_days_of_shift_type_since_last_on_shift.get(
+                    ShiftType.SUNDAY, {}
+                ).get(
+                    person.val
+                )
+
+                if (sats_since_last is not None and sats_since_last < self._x) or (
+                    suns_since_last is not None and suns_since_last < self._x
+                ):
+                    for shift in shifts:
+                        yield assignments[(person.index, day.index, shift.index)] == 0
+
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        return self._x == other._x
+
+
 CONSTRAINTS = {
     constraint.__name__: constraint
     for constraint in [
         EachShiftIsAssignedToExactlyOnePerson,
         EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
         ThereShouldBeAtLeastXDaysBetweenOps,
+        ThereShouldBeAtLeastXWeekendsBetweenWeekendOps,
     ]
 }

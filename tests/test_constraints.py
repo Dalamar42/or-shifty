@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date
 from unittest.mock import Mock
 
 from ortools.sat.python.cp_model import CpModel, EvaluateLinearExpr
@@ -9,6 +9,7 @@ from shifty.constraints import (
     EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
     EachShiftIsAssignedToExactlyOnePerson,
     ThereShouldBeAtLeastXDaysBetweenOps,
+    ThereShouldBeAtLeastXWeekendsBetweenWeekendOps,
 )
 from shifty.data import History, PastShift, Person, Shift
 from shifty.data.run import RunData
@@ -45,7 +46,14 @@ def people():
 
 @fixture
 def days():
-    return [date(2019, 1, 1), date(2019, 1, 2)]
+    return [
+        date(2019, 1, 1),
+        date(2019, 1, 2),
+        date(2019, 1, 3),
+        date(2019, 1, 4),
+        date(2019, 1, 5),  # Sat
+        date(2019, 1, 6),  # Sun
+    ]
 
 
 @fixture
@@ -91,17 +99,46 @@ def test_each_shift_is_assigned_to_exactly_one_person(
     assignments = init_assignments(model, data.people, data.shifts_by_day)
     expressions = build_expressions(constraint, data, assignments)
 
-    # The two people have been given different shifts
+    # Each shift is assigned
     assert evaluate(
         assignments,
-        ((data.people[0].index, 0, 0), (data.people[0].index, 1, 0)),
+        (
+            (data.people[0].index, 0, 0),
+            (data.people[0].index, 1, 0),
+            (data.people[0].index, 2, 0),
+            (data.people[0].index, 3, 0),
+            (data.people[0].index, 4, 0),
+            (data.people[0].index, 5, 0),
+        ),
         expressions,
     )
 
     # First day's shift has been given to both people
     assert not evaluate(
         assignments,
-        ((data.people[0].index, 0, 0), (data.people[1].index, 0, 0)),
+        (
+            (data.people[0].index, 0, 0),
+            (data.people[1].index, 0, 0),
+            (data.people[0].index, 0, 0),
+            (data.people[0].index, 1, 0),
+            (data.people[0].index, 2, 0),
+            (data.people[0].index, 3, 0),
+            (data.people[0].index, 4, 0),
+            (data.people[0].index, 5, 0),
+        ),
+        expressions,
+    )
+
+    # Last shift is unassigned
+    assert not evaluate(
+        assignments,
+        (
+            (data.people[0].index, 0, 0),
+            (data.people[0].index, 1, 0),
+            (data.people[0].index, 2, 0),
+            (data.people[0].index, 3, 0),
+            (data.people[0].index, 4, 0),
+        ),
         expressions,
     )
 
@@ -131,12 +168,12 @@ def test_each_person_works_at_most_one_shift_per_day(
 
 
 def test_there_should_be_at_least_x_days_between_ops(
-    model, build_run_data, build_expressions, people, days, shifts
+    model, build_run_data, build_expressions, people, shifts
 ):
     constraint = ThereShouldBeAtLeastXDaysBetweenOps(priority=0, x=1)
 
     history = History.build(
-        past_shifts=[PastShift.build(people[0], days[0] - timedelta(days=1), shifts[0])]
+        past_shifts=[PastShift.build(people[0], date(2018, 12, 31), shifts[0])]
     )
     data = build_run_data(history=history)
     assignments = init_assignments(model, data.people, data.shifts_by_day)
@@ -147,3 +184,27 @@ def test_there_should_be_at_least_x_days_between_ops(
 
     # Shifts are back to back
     assert not evaluate(assignments, ((data.people[0].index, 0, 0),), expressions)
+
+
+def test_there_should_be_at_least_x_weekends_between_weekend_ops(
+    model, build_run_data, build_expressions, people, days, shifts
+):
+    constraint = ThereShouldBeAtLeastXWeekendsBetweenWeekendOps(priority=0, x=1)
+
+    history = History.build(
+        past_shifts=[
+            PastShift.build(people[0], date(2018, 12, 29), shifts[0]),
+            PastShift.build(people[1], date(2018, 12, 23), shifts[0]),
+        ]
+    )
+    data = build_run_data(history=history)
+    assignments = init_assignments(model, data.people, data.shifts_by_day)
+    expressions = build_expressions(constraint, data, assignments)
+
+    # Second person is ok to assign to the weekend because they had a free weekend in between
+    assert evaluate(assignments, ((data.people[1].index, 4, 0),), expressions)
+    assert evaluate(assignments, ((data.people[1].index, 5, 0),), expressions)
+
+    # First person has just been on a weekend ops
+    assert not evaluate(assignments, ((data.people[0].index, 4, 0),), expressions)
+    assert not evaluate(assignments, ((data.people[0].index, 5, 0),), expressions)
