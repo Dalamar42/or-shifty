@@ -2,7 +2,7 @@ from datetime import date
 from typing import NamedTuple, List, Dict
 
 from . import Shift, Person, History
-from shifty.history import HistoryMetrics
+from shifty.history_metrics import HistoryMetrics
 
 
 class IndexedPerson(NamedTuple):

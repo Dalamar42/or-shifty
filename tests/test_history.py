@@ -1,7 +1,7 @@
 from datetime import date
 
 from shifty.data import History, PastShift, Person, Shift, ShiftType
-from shifty.history import HistoryMetrics
+from shifty.history_metrics import HistoryMetrics
 
 
 def test_num_of_shifts():
