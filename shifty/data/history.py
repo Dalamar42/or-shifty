@@ -1,14 +1,7 @@
 from datetime import date
-from enum import Enum, auto
 from typing import List, NamedTuple, Tuple
 
-from . import Person, Shift
-
-
-class ShiftType(Enum):
-    NORMAL = auto()
-    SATURDAY = auto()
-    SUNDAY = auto()
+from . import Person, Shift, ShiftType
 
 
 class PastShift(NamedTuple):
