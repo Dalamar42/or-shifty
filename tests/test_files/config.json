@@ -8,22 +8,28 @@
   ],
   "constraints": [
     {
-      "name": "EachShiftIsAssignedToExactlyOnePerson",
+      "type": "EachShiftIsAssignedToExactlyOnePerson",
       "priority": 0
     },
     {
-      "name": "EachPersonWorksAtMostOneShiftPerAssignmentPeriod",
+      "type": "EachPersonWorksAtMostOneShiftPerAssignmentPeriod",
       "priority": 0
     },
     {
-      "name": "ThereShouldBeAtLeastXDaysBetweenOps",
+      "type": "ThereShouldBeAtLeastXDaysBetweenOps",
       "priority": 1,
       "params": {"x":  4}
     },
     {
-      "name": "RespectPersonPermissionsPerShiftType",
+      "type": "RespectPersonRestrictionsPerShiftType",
       "priority": 2,
       "params": {"forbidden_by_shift_type": {"SATURDAY": ["Admiral Ackbar"]}}
+    },
+    {
+      "type": "RespectPersonRestrictionsPerDay",
+      "name": "Holidays",
+      "priority": 3,
+      "params": {"restrictions": {"Admiral Ackbar": [1]}}
     }
   ]
 }

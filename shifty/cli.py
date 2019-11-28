@@ -91,8 +91,10 @@ def _parse_shifts_by_day(config, date_from, date_to) -> Dict[date, List[Shift]]:
 def _parse_constraints(config) -> List[Constraint]:
     print(CONSTRAINTS)
     constraints = [
-        CONSTRAINTS[constraint["name"]](
-            priority=constraint["priority"], **constraint.get("params", {})
+        CONSTRAINTS[constraint["type"]](
+            priority=constraint["priority"],
+            name=constraint.get("name"),
+            **constraint.get("params", {})
         )
         for constraint in config["constraints"]
     ]

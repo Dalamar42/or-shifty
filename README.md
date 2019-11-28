@@ -7,5 +7,5 @@
 - [X] Free weekends between weekend ops constraint
 - [ ] Optimise for minimising deviation from the mean
 - [ ] Support history offsets for new joiners
-- [ ] Support people's preferences for specific shifts
-- [ ] Support holidays constraint
+- [X] Support people's preferences for specific shifts
+- [X] Support holidays constraint

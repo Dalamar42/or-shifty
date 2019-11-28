@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Generator, List, Tuple
+from typing import Dict, Generator, List, Optional, Tuple
 
 from ortools.sat.python.cp_model import IntVar, LinearExpr
 
@@ -9,8 +9,8 @@ from .data import RunData
 
 
 class Constraint(metaclass=ABCMeta):
-    def __init__(self, priority: int):
-        self._name = self.__class__.__name__
+    def __init__(self, priority: int, name: Optional[str] = None):
+        self._name = name or self.__class__.__name__
         self._priority = priority  # lower is higher
 
     def __str__(self):
@@ -30,6 +30,8 @@ class Constraint(metaclass=ABCMeta):
         if other is None:
             return False
         if type(self) != type(other):
+            return False
+        if str(self) != str(other):
             return False
         return self.priority == other.priority
 
@@ -133,7 +135,7 @@ class ThereShouldBeAtLeastXWeekendsBetweenWeekendOps(Constraint):
         return self._x == other._x
 
 
-class RespectPersonPermissionsPerShiftType(Constraint):
+class RespectPersonRestrictionsPerShiftType(Constraint):
     def __init__(self, forbidden_by_shift_type: Dict[str, List[str]] = None, **kwargs):
         super().__init__(**kwargs)
         assert forbidden_by_shift_type is not None
@@ -165,6 +167,29 @@ class RespectPersonPermissionsPerShiftType(Constraint):
         return self._forbidden_by_shift_type == other._forbidden_by_shift_type
 
 
+class RespectPersonRestrictionsPerDay(Constraint):
+    def __init__(self, restrictions: Dict[str, List[int]] = None, **kwargs):
+        super().__init__(**kwargs)
+        assert restrictions is not None
+        self._restrictions = {
+            person_name: set(weekdays) for person_name, weekdays in restrictions.items()
+        }
+
+    def generate(
+        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+    ) -> Generator[LinearExpr, None, None]:
+        for day, shifts in data.shifts_by_day.items():
+            for person in data.people:
+                if day.val.weekday() in self._restrictions.get(person.val.name, set()):
+                    for shift in shifts:
+                        yield assignments[(person.index, day.index, shift.index)] == 0
+
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        return self._restrictions == other._restrictions
+
+
 CONSTRAINTS = {
     constraint.__name__: constraint
     for constraint in [
@@ -172,6 +197,7 @@ CONSTRAINTS = {
         EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
         ThereShouldBeAtLeastXDaysBetweenOps,
         ThereShouldBeAtLeastXWeekendsBetweenWeekendOps,
-        RespectPersonPermissionsPerShiftType,
+        RespectPersonRestrictionsPerShiftType,
+        RespectPersonRestrictionsPerDay,
     ]
 }
