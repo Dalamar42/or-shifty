@@ -9,11 +9,11 @@ freeze:         ## Freeze python requirements
 	poetry update --lock
 
 .PHONY: install
-install:        ## Install python requirments
+install:        ## Install python requirements
 	poetry install
 
 .PHONY: format
-format:
+format:         ## Run linter and formatter
 	isort **/*.py
 	black shifty
 	black tests
@@ -21,9 +21,9 @@ format:
 	flake8 tests
 
 .PHONY: test
-test:
+test:           ## Run tests
 	pytest -vv tests
 
 .PHONY: build
-build:
+build:          ## Build project
 	poetry build
