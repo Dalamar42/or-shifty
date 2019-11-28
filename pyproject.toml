@@ -6,7 +6,7 @@ description = ""
 authors = ["Thomas Maroulis <thomasmaroulis@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 ortools = "^7.2"
 
 [tool.poetry.dev-dependencies]
