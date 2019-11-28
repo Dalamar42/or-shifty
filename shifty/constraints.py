@@ -73,12 +73,14 @@ class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
     ) -> Generator[LinearExpr, None, None]:
         for day, shifts in data.shifts_by_day.items():
             for person in data.people:
-                date_last_on_shift = data.history_metrics.date_last_on_shift[person.val]
+                date_last_on_shift = data.history_metrics.date_last_on_shift.get(
+                    person.val
+                )
 
                 if date_last_on_shift is None:
                     continue
 
-                if (day.val - date_last_on_shift).days >= self._x:
+                if (day.val - date_last_on_shift).days > self._x:
                     continue
 
                 for shift in shifts:

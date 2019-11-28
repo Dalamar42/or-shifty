@@ -27,7 +27,13 @@ class RunData(NamedTuple):
     history_metrics: HistoryMetrics
 
     @classmethod
-    def build(cls, people, shifts_by_day, history, now):
+    def build(
+        cls,
+        people: List[Person],
+        shifts_by_day: Dict[date, List[Shift]],
+        history: History,
+        now: date,
+    ):
         return cls(
             people=cls._index_people(people),
             shifts_by_day=cls._index_shifts_by_day(shifts_by_day),
