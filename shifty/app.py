@@ -1,29 +1,25 @@
 import logging
-from datetime import date
 
-from .data import Person, Shift
+from .cli import parse_args
 from .model import assign
 
 log = logging.getLogger(__name__)
 
 
 def ops():
+    inputs = parse_args()
     solution = assign(
-        [Person(name=f"person_{index}") for index in range(7)],
-        1,
-        {
-            date(2019, 1, 1): [Shift(name="shift")],
-            date(2019, 1, 2): [Shift(name="shift")],
-            date(2019, 1, 3): [Shift(name="shift")],
-            date(2019, 1, 4): [Shift(name="shift")],
-            date(2019, 1, 5): [Shift(name="shift")],
-            date(2019, 1, 6): [Shift(name="shift")],
-            date(2019, 1, 7): [Shift(name="shift")],
-        },
+        people=inputs.people,
+        max_shifts_per_person=inputs.max_shifts_per_person,
+        shifts_by_day=inputs.shifts_by_day,
+        history=inputs.history,
+        now=inputs.now,
+        objective=inputs.objective,
+        constraints=inputs.constraints,
     )
 
-    for person, day, shift in solution:
-        print(f"{person.name} works {day}/{shift.name}")
+    for person, person_shift, day, day_shift in solution:
+        print(f"{person.name} works shift {person_shift + 1} on {day} / {day_shift.name}")
     print()
 
 

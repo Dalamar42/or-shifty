@@ -10,6 +10,28 @@ class HistoryMetrics(NamedTuple):
     num_of_shifts: Dict[ShiftType, Dict[Person, int]]
     date_last_on_shift: Dict[Person, date]
     free_days_of_shift_type_since_last_on_shift: Dict[ShiftType, Dict[Person, int]]
+    now: date
+
+    def __str__(self):
+        formatted = "Pre-allocation history metrics:\n"
+        formatted += "Name\t\tWeekday\t\tSaturday\tSunday\t\tLast on\n"
+
+        for person in self.date_last_on_shift.keys():
+            formatted += f"{person.name}\t\t"
+
+            formatted += f"{self.num_of_shifts[ShiftType.WEEKDAY][person]}"
+            formatted += "\t\t"
+
+            formatted += f"{self.num_of_shifts[ShiftType.SATURDAY][person]}"
+            formatted += "\t\t"
+
+            formatted += f"{self.num_of_shifts[ShiftType.SUNDAY][person]}"
+            formatted += "\t\t"
+
+            formatted += f"{(self.date_last_on_shift[person] - self.now).days}"
+
+            formatted += "\n"
+        return formatted
 
     @classmethod
     def build(cls, history: History, people: List[Person], now: date):
@@ -19,6 +41,7 @@ class HistoryMetrics(NamedTuple):
             free_days_of_shift_type_since_last_on_shift=_free_days_of_type_since_last_on_shift(
                 history, people, now
             ),
+            now=now,
         )
 
 

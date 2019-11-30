@@ -28,7 +28,8 @@ def assign(
 
 
 def _run(data, objective, constraints):
-    log.info("Running model with constraints: %s", [str(c) for c in constraints])
+    log.info("Running model")
+    log.info(str(data.history_metrics))
 
     model = cp_model.CpModel()
 
