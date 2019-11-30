@@ -16,21 +16,20 @@ class HistoryMetrics(NamedTuple):
 
     def __str__(self):
         formatted = "Pre-allocation history metrics:\n"
-        formatted += "Name\t\tWeekday\t\tSaturday\tSunday\t\tLast on\n"
+        formatted += "{: <20}{: <15}{: <15}{: <15}{: <15}\n".format(
+            "Name", "Weekday", "Saturday", "Sunday", "Last on"
+        )
 
         for person in self.date_last_on_shift.keys():
-            formatted += f"{person.name}\t\t"
+            if len(person.name) > 16:
+                formatted += f"{person.name[:16] + '...': <20}"
+            else:
+                formatted += f"{person.name: <20}"
 
-            formatted += f"{self.num_of_shifts[ShiftType.WEEKDAY][person]}"
-            formatted += "\t\t"
-
-            formatted += f"{self.num_of_shifts[ShiftType.SATURDAY][person]}"
-            formatted += "\t\t"
-
-            formatted += f"{self.num_of_shifts[ShiftType.SUNDAY][person]}"
-            formatted += "\t\t"
-
-            formatted += f"{(self.date_last_on_shift[person] - self.now).days}"
+            formatted += f"{self.num_of_shifts[ShiftType.WEEKDAY][person]: <15}"
+            formatted += f"{self.num_of_shifts[ShiftType.SATURDAY][person]: <15}"
+            formatted += f"{self.num_of_shifts[ShiftType.SUNDAY][person]: <15}"
+            formatted += f"{(self.date_last_on_shift[person] - self.now).days: <15}"
 
             formatted += "\n"
         return formatted
