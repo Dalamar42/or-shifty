@@ -40,7 +40,6 @@ def test_parsing_inputs():
         date(2019, 12, 1): [Shift(name="ops")],
     }
     assert inputs.constraints == [
-        EachShiftIsAssignedToExactlyOnePerson(priority=0),
         EachPersonWorksAtMostOneShiftPerAssignmentPeriod(priority=0),
         ThereShouldBeAtLeastXDaysBetweenOps(priority=1, x=4),
         RespectPersonRestrictionsPerShiftType(

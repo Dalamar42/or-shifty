@@ -6,11 +6,8 @@
   "shifts": [
     {"name": "ops"}
   ],
+  "max_shifts_per_person": 2,
   "constraints": [
-    {
-      "type": "EachShiftIsAssignedToExactlyOnePerson",
-      "priority": 0
-    },
     {
       "type": "EachPersonWorksAtMostOneShiftPerAssignmentPeriod",
       "priority": 0

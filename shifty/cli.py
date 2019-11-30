@@ -9,6 +9,7 @@ from shifty.data import History, PastShift, Person, Shift
 
 class Inputs(NamedTuple):
     people: List[Person]
+    max_shifts_per_person: int
     shifts_by_day: Dict[date, List[Shift]]
     constraints: List[Constraint]
     history: History
@@ -69,6 +70,7 @@ def _parse_inputs(
 
     return Inputs(
         people=_parse_people(config),
+        max_shifts_per_person=_parse_max_shifts_per_person(config),
         shifts_by_day=_parse_shifts_by_day(config, date_from, date_to),
         constraints=_parse_constraints(config),
         history=_parse_history(history),
@@ -80,6 +82,10 @@ def _parse_people(config) -> List[Person]:
     return [Person(name=person["name"]) for person in config["people"]]
 
 
+def _parse_max_shifts_per_person(config) -> int:
+    return int(config["max_shifts_per_person"])
+
+
 def _parse_shifts_by_day(config, date_from, date_to) -> Dict[date, List[Shift]]:
     shifts = [Shift(name=shift["name"]) for shift in config["shifts"]]
     dates = [
@@ -89,8 +95,7 @@ def _parse_shifts_by_day(config, date_from, date_to) -> Dict[date, List[Shift]]:
 
 
 def _parse_constraints(config) -> List[Constraint]:
-    print(CONSTRAINTS)
-    constraints = [
+    return [
         CONSTRAINTS[constraint["type"]](
             priority=constraint["priority"],
             name=constraint.get("name"),
@@ -98,7 +103,6 @@ def _parse_constraints(config) -> List[Constraint]:
         )
         for constraint in config["constraints"]
     ]
-    return sorted(constraints, key=lambda c: c.priority)
 
 
 def _parse_history(history) -> History:

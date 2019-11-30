@@ -60,7 +60,7 @@ def days():
 
 @fixture
 def shifts():
-    return [Shift(name="shift-1")]
+    return [Shift(name="shift")]
 
 
 @fixture
@@ -73,7 +73,11 @@ def build_run_data(people, days, shifts, now):
     def build(history=History.build()):
         shifts_per_day = {day: list(shifts) for day in days}
         run_data = RunData.build(
-            people=people, shifts_by_day=shifts_per_day, history=history, now=now
+            people=people,
+            max_shifts_per_person=1,
+            shifts_by_day=shifts_per_day,
+            history=history,
+            now=now,
         )
         return run_data
 
@@ -98,19 +102,19 @@ def test_each_shift_is_assigned_to_exactly_one_person(
     constraint = EachShiftIsAssignedToExactlyOnePerson(priority=0)
 
     data = build_run_data()
-    assignments = init_assignments(model, data.people, data.shifts_by_day)
+    assignments = init_assignments(model, data)
     expressions = build_expressions(constraint, data, assignments)
 
     # Each shift is assigned
     assert evaluate(
         assignments,
         (
-            (data.people[0].index, 0, 0),
-            (data.people[0].index, 1, 0),
-            (data.people[0].index, 2, 0),
-            (data.people[0].index, 3, 0),
-            (data.people[0].index, 4, 0),
-            (data.people[0].index, 5, 0),
+            (0, 0, 0, 0),
+            (0, 0, 1, 0),
+            (0, 0, 2, 0),
+            (0, 0, 3, 0),
+            (0, 0, 4, 0),
+            (0, 0, 5, 0),
         ),
         expressions,
     )
@@ -119,14 +123,14 @@ def test_each_shift_is_assigned_to_exactly_one_person(
     assert not evaluate(
         assignments,
         (
-            (data.people[0].index, 0, 0),
-            (data.people[1].index, 0, 0),
-            (data.people[0].index, 0, 0),
-            (data.people[0].index, 1, 0),
-            (data.people[0].index, 2, 0),
-            (data.people[0].index, 3, 0),
-            (data.people[0].index, 4, 0),
-            (data.people[0].index, 5, 0),
+            (0, 0, 0, 0),
+            (1, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 1, 0),
+            (0, 0, 2, 0),
+            (0, 0, 3, 0),
+            (0, 0, 4, 0),
+            (0, 0, 5, 0),
         ),
         expressions,
     )
@@ -134,13 +138,7 @@ def test_each_shift_is_assigned_to_exactly_one_person(
     # Last shift is unassigned
     assert not evaluate(
         assignments,
-        (
-            (data.people[0].index, 0, 0),
-            (data.people[0].index, 1, 0),
-            (data.people[0].index, 2, 0),
-            (data.people[0].index, 3, 0),
-            (data.people[0].index, 4, 0),
-        ),
+        ((0, 0, 0, 0), (0, 0, 1, 0), (0, 0, 2, 0), (0, 0, 3, 0), (0, 0, 4, 0)),
         expressions,
     )
 
@@ -151,22 +149,14 @@ def test_each_person_works_at_most_one_shift_per_day(
     constraint = EachPersonWorksAtMostOneShiftPerAssignmentPeriod(priority=0)
 
     data = build_run_data()
-    assignments = init_assignments(model, data.people, data.shifts_by_day)
+    assignments = init_assignments(model, data)
     expressions = build_expressions(constraint, data, assignments)
 
     # Each person has only one shift
-    assert evaluate(
-        assignments,
-        ((data.people[0].index, 0, 0), (data.people[1].index, 1, 0)),
-        expressions,
-    )
+    assert evaluate(assignments, ((0, 0, 0, 0), (1, 0, 1, 0)), expressions)
 
     # First person has been given two shifts
-    assert not evaluate(
-        assignments,
-        ((data.people[0].index, 0, 0), (data.people[0].index, 1, 0)),
-        expressions,
-    )
+    assert not evaluate(assignments, ((0, 0, 0, 0), (0, 0, 1, 0)), expressions)
 
 
 def test_there_should_be_at_least_x_days_between_ops(
@@ -178,14 +168,14 @@ def test_there_should_be_at_least_x_days_between_ops(
         past_shifts=[PastShift.build(people[0], date(2018, 12, 31), shifts[0])]
     )
     data = build_run_data(history=history)
-    assignments = init_assignments(model, data.people, data.shifts_by_day)
+    assignments = init_assignments(model, data)
     expressions = build_expressions(constraint, data, assignments)
 
     # One day gap between shifts
-    assert evaluate(assignments, ((data.people[0].index, 1, 0),), expressions)
+    assert evaluate(assignments, ((0, 0, 1, 0),), expressions)
 
     # Shifts are back to back
-    assert not evaluate(assignments, ((data.people[0].index, 0, 0),), expressions)
+    assert not evaluate(assignments, ((0, 0, 0, 0),), expressions)
 
 
 def test_there_should_be_at_least_x_weekends_between_weekend_ops(
@@ -200,16 +190,16 @@ def test_there_should_be_at_least_x_weekends_between_weekend_ops(
         ]
     )
     data = build_run_data(history=history)
-    assignments = init_assignments(model, data.people, data.shifts_by_day)
+    assignments = init_assignments(model, data)
     expressions = build_expressions(constraint, data, assignments)
 
     # Second person is ok to assign to the weekend because they had a free weekend in between
-    assert evaluate(assignments, ((data.people[1].index, 4, 0),), expressions)
-    assert evaluate(assignments, ((data.people[1].index, 5, 0),), expressions)
+    assert evaluate(assignments, ((1, 0, 4, 0),), expressions)
+    assert evaluate(assignments, ((1, 0, 5, 0),), expressions)
 
     # First person has just been on a weekend ops
-    assert not evaluate(assignments, ((data.people[0].index, 4, 0),), expressions)
-    assert not evaluate(assignments, ((data.people[0].index, 5, 0),), expressions)
+    assert not evaluate(assignments, ((0, 0, 4, 0),), expressions)
+    assert not evaluate(assignments, ((0, 0, 5, 0),), expressions)
 
 
 def test_respect_person_permissions_per_shift_type(
@@ -218,36 +208,34 @@ def test_respect_person_permissions_per_shift_type(
     data = build_run_data()
 
     constraint = RespectPersonRestrictionsPerShiftType(
-        priority=0, forbidden_by_shift_type={"SATURDAY": [data.people[0].val.name]}
+        priority=0, forbidden_by_shift_type={"SATURDAY": ["A"]}
     )
 
-    assignments = init_assignments(model, data.people, data.shifts_by_day)
+    assignments = init_assignments(model, data)
     expressions = build_expressions(constraint, data, assignments)
 
     # Second person can be assigned to both Sat and Sun
-    assert evaluate(assignments, ((data.people[1].index, 4, 0),), expressions)
-    assert evaluate(assignments, ((data.people[1].index, 5, 0),), expressions)
+    assert evaluate(assignments, ((1, 0, 4, 0),), expressions)
+    assert evaluate(assignments, ((1, 0, 5, 0),), expressions)
 
     # First person can be assigned to Sun, but not Sat
-    assert not evaluate(assignments, ((data.people[0].index, 4, 0),), expressions)
-    assert evaluate(assignments, ((data.people[0].index, 5, 0),), expressions)
+    assert not evaluate(assignments, ((0, 0, 4, 0),), expressions)
+    assert evaluate(assignments, ((0, 0, 5, 0),), expressions)
 
 
 def test_respect_person_permissions_per_day(model, build_run_data, build_expressions):
     data = build_run_data()
 
-    constraint = RespectPersonRestrictionsPerDay(
-        priority=0, restrictions={data.people[0].val.name: [1]}
-    )
+    constraint = RespectPersonRestrictionsPerDay(priority=0, restrictions={"A": [1]})
 
-    assignments = init_assignments(model, data.people, data.shifts_by_day)
+    assignments = init_assignments(model, data)
     expressions = build_expressions(constraint, data, assignments)
 
     # Second person can be assigned to all days
     for day in range(0, 5):
-        assert evaluate(assignments, ((data.people[1].index, day, 0),), expressions)
+        assert evaluate(assignments, ((1, 0, day, 0),), expressions)
 
     # First person can be assigned to every day, but Monday
-    assert not evaluate(assignments, ((data.people[0].index, 0, 0),), expressions)
+    assert not evaluate(assignments, ((0, 0, 0, 0),), expressions)
     for day in range(1, 5):
-        assert evaluate(assignments, ((data.people[0].index, day, 0),), expressions)
+        assert evaluate(assignments, ((0, 0, day, 0),), expressions)

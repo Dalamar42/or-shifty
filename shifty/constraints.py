@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from itertools import product
 from typing import Dict, Generator, List, Optional, Tuple
 
 from ortools.sat.python.cp_model import IntVar, LinearExpr
@@ -22,7 +23,7 @@ class Constraint(metaclass=ABCMeta):
 
     @abstractmethod
     def generate(
-        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
     ) -> Generator[LinearExpr, None, None]:
         yield from ()
 
@@ -38,14 +39,16 @@ class Constraint(metaclass=ABCMeta):
 
 class EachShiftIsAssignedToExactlyOnePerson(Constraint):
     def generate(
-        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
     ) -> Generator[LinearExpr, None, None]:
-        for day, shifts in data.shifts_by_day.items():
-            for shift in shifts:
+        for day, day_shifts in data.shifts_by_day.items():
+            for day_shift in day_shifts:
                 yield (
                     sum(
-                        assignments[(person.index, day.index, shift.index)]
-                        for person in data.people
+                        assignments[index.get()]
+                        for index in data.iter(
+                            day_filter=day, day_shift_filter=day_shift
+                        )
                     )
                     == 1
                 )
@@ -53,14 +56,13 @@ class EachShiftIsAssignedToExactlyOnePerson(Constraint):
 
 class EachPersonWorksAtMostOneShiftPerAssignmentPeriod(Constraint):
     def generate(
-        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
     ) -> Generator[LinearExpr, None, None]:
-        for person in data.people:
+        for person in data.shifts_by_person.keys():
             yield (
                 sum(
-                    assignments[(person.index, day.index, shift.index)]
-                    for day, shifts in data.shifts_by_day.items()
-                    for shift in shifts
+                    assignments[index.get()]
+                    for index in data.iter(person_filter=person)
                 )
                 <= 1
             )
@@ -73,22 +75,21 @@ class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
         self._x = x
 
     def generate(
-        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
     ) -> Generator[LinearExpr, None, None]:
-        for day, shifts in data.shifts_by_day.items():
-            for person in data.people:
-                date_last_on_shift = data.history_metrics.date_last_on_shift.get(
-                    person.val
-                )
+        for person, day in product(
+            data.shifts_by_person.keys(), data.shifts_by_day.keys()
+        ):
+            date_last_on_shift = data.history_metrics.date_last_on_shift.get(person.val)
 
-                if date_last_on_shift is None:
-                    continue
+            if date_last_on_shift is None:
+                continue
 
-                if (day.val - date_last_on_shift).days > self._x:
-                    continue
+            if (day.val - date_last_on_shift).days > self._x:
+                continue
 
-                for shift in shifts:
-                    yield assignments[(person.index, day.index, shift.index)] == 0
+            for index in data.iter(person_filter=person, day_filter=day):
+                yield assignments[index.get()] == 0
 
     def __eq__(self, other):
         if not super().__eq__(other):
@@ -103,31 +104,32 @@ class ThereShouldBeAtLeastXWeekendsBetweenWeekendOps(Constraint):
         self._x = x
 
     def generate(
-        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
     ) -> Generator[LinearExpr, None, None]:
-        for day, shifts in data.shifts_by_day.items():
+        for person, day in product(
+            data.shifts_by_person.keys(), data.shifts_by_day.keys()
+        ):
             is_weekend = day.val.weekday() in {5, 6}
             if not is_weekend:
                 continue
 
-            for person in data.people:
-                sats_since_last = data.history_metrics.free_days_of_shift_type_since_last_on_shift.get(
-                    ShiftType.SATURDAY, {}
-                ).get(
-                    person.val
-                )
+            sats_since_last = data.history_metrics.free_days_of_shift_type_since_last_on_shift.get(
+                ShiftType.SATURDAY, {}
+            ).get(
+                person.val
+            )
 
-                suns_since_last = data.history_metrics.free_days_of_shift_type_since_last_on_shift.get(
-                    ShiftType.SUNDAY, {}
-                ).get(
-                    person.val
-                )
+            suns_since_last = data.history_metrics.free_days_of_shift_type_since_last_on_shift.get(
+                ShiftType.SUNDAY, {}
+            ).get(
+                person.val
+            )
 
-                if (sats_since_last is not None and sats_since_last < self._x) or (
-                    suns_since_last is not None and suns_since_last < self._x
-                ):
-                    for shift in shifts:
-                        yield assignments[(person.index, day.index, shift.index)] == 0
+            if (sats_since_last is not None and sats_since_last < self._x) or (
+                suns_since_last is not None and suns_since_last < self._x
+            ):
+                for index in data.iter(person_filter=person, day_filter=day):
+                    yield assignments[index.get()] == 0
 
     def __eq__(self, other):
         if not super().__eq__(other):
@@ -145,23 +147,25 @@ class RespectPersonRestrictionsPerShiftType(Constraint):
         }
 
     def generate(
-        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
     ) -> Generator[LinearExpr, None, None]:
-        for day, shifts in data.shifts_by_day.items():
-            for person in data.people:
-                yield from self._generate_for_type(
-                    assignments, day, person, shifts, ShiftType.SATURDAY
-                )
-                yield from self._generate_for_type(
-                    assignments, day, person, shifts, ShiftType.SUNDAY
-                )
+        for person, day in product(
+            data.shifts_by_person.keys(), data.shifts_by_day.keys()
+        ):
+            yield from self._generate_for_type(
+                assignments, data, person, day, ShiftType.SATURDAY
+            )
+            yield from self._generate_for_type(
+                assignments, data, person, day, ShiftType.SUNDAY
+            )
 
-    def _generate_for_type(self, assignments, day, person, shifts, shift_type):
-        if shift_type.is_of_type(
-            day.val
-        ) and person.val.name in self._forbidden_by_shift_type.get(shift_type, set()):
-            for shift in shifts:
-                yield assignments[(person.index, day.index, shift.index)] == 0
+    def _generate_for_type(self, assignments, data, person, day, shift_type):
+        if not shift_type.is_of_type(day.val):
+            return
+        if person.val.name not in self._forbidden_by_shift_type.get(shift_type, set()):
+            return
+        for index in data.iter(person_filter=person, day_filter=day):
+            yield assignments[index.get()] == 0
 
     def __eq__(self, other):
         if not super().__eq__(other):
@@ -178,13 +182,14 @@ class RespectPersonRestrictionsPerDay(Constraint):
         }
 
     def generate(
-        self, assignments: Dict[Tuple[int, int, int], IntVar], data: RunData
+        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
     ) -> Generator[LinearExpr, None, None]:
-        for day, shifts in data.shifts_by_day.items():
-            for person in data.people:
-                if day.val.weekday() in self._restrictions.get(person.val.name, set()):
-                    for shift in shifts:
-                        yield assignments[(person.index, day.index, shift.index)] == 0
+        for person, day in product(
+            data.shifts_by_person.keys(), data.shifts_by_day.keys()
+        ):
+            if day.val.weekday() in self._restrictions.get(person.val.name, set()):
+                for index in data.iter(person_filter=person, day_filter=day):
+                    yield assignments[index.get()] == 0
 
     def __eq__(self, other):
         if not super().__eq__(other):
@@ -192,10 +197,12 @@ class RespectPersonRestrictionsPerDay(Constraint):
         return self._restrictions == other._restrictions
 
 
+FIXED_CONSTRAINTS = [EachShiftIsAssignedToExactlyOnePerson(priority=0)]
+
+
 CONSTRAINTS = {
     constraint.__name__: constraint
     for constraint in [
-        EachShiftIsAssignedToExactlyOnePerson,
         EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
         ThereShouldBeAtLeastXDaysBetweenOps,
         ThereShouldBeAtLeastXWeekendsBetweenWeekendOps,
