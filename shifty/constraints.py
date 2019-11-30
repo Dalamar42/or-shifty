@@ -11,8 +11,9 @@ from shifty.shift import ShiftType
 
 class Constraint(metaclass=ABCMeta):
     def __init__(self, priority: int, name: Optional[str] = None):
+        assert priority >= 0
         self._name = name or self.__class__.__name__
-        self._priority = priority  # lower is higher
+        self._priority = priority  # lower number is higher priority, 0 means this constraint is mandatory
 
     def __str__(self):
         return self._name

@@ -3,6 +3,7 @@ from datetime import date
 from typing import Dict, List
 
 from ortools.sat.python import cp_model
+from ortools.sat.python.cp_model import INFEASIBLE
 
 from shifty.base_types import DayShift, Person
 from shifty.config import Config
@@ -12,6 +13,10 @@ from shifty.objective import Objective, RankingWeight
 from shifty.shift import AssignedShift
 
 log = logging.getLogger(__name__)
+
+
+class Infeasible(Exception):
+    pass
 
 
 def assign(
@@ -27,13 +32,41 @@ def assign(
     constraints = sorted(constraints, key=lambda c: c.priority)
     now = now or date.today()
     data = Config.build(people, max_shifts_per_person, shifts_by_day, history, now)
-    return _run(data, objective, constraints)
+    log.info(str(data.history_metrics))
+
+    log.info("Running model...")
+    while True:
+        try:
+            solution = _run(data, objective, constraints)
+            log.info("Solution found")
+            return solution
+        except Infeasible:
+            log.info("Failed to find solution with current constraints")
+            constraints = _drop_least_important_constraints(constraints)
+            if constraints is None:
+                raise
+            log.info("Retrying model...")
+
+
+def _drop_least_important_constraints(constraints):
+    priority_to_drop = max(constraint.priority for constraint in constraints)
+    if priority_to_drop == 0:
+        return None
+    constraints_to_drop = [
+        constraint
+        for constraint in constraints
+        if constraint.priority == priority_to_drop
+    ]
+    log.info("Dropping constraints %s", ", ".join(str(c) for c in constraints_to_drop))
+
+    return [
+        constraint
+        for constraint in constraints
+        if constraint.priority != priority_to_drop
+    ]
 
 
 def _run(data, objective, constraints):
-    log.info("Running model")
-    log.info(str(data.history_metrics))
-
     model = cp_model.CpModel()
 
     assignments = init_assignments(model, data)
@@ -45,7 +78,9 @@ def _run(data, objective, constraints):
     model.Maximize(objective.objective(assignments, data))
 
     solver = cp_model.CpSolver()
-    solver.Solve(model)
+    status = solver.Solve(model)
+    if status is INFEASIBLE:
+        raise Infeasible()
 
     return list(_solution(solver, data, assignments))
 
