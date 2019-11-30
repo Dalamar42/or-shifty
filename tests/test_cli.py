@@ -3,7 +3,6 @@ from datetime import date
 from shifty.cli import parse_args
 from shifty.constraints import (
     EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
-    EachShiftIsAssignedToExactlyOnePerson,
     RespectPersonRestrictionsPerDay,
     RespectPersonRestrictionsPerShiftType,
     ThereShouldBeAtLeastXDaysBetweenOps,

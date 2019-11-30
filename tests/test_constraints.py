@@ -6,8 +6,10 @@ from ortools.sat.python.cp_model import CpModel, EvaluateLinearExpr
 from pytest import fixture
 
 from shifty.constraints import (
+    EachDayShiftIsAssignedToExactlyOnePersonShift,
+    EachPersonShiftIsAssignedToAtMostOneDayShift,
+    EachPersonsShiftsAreFilledInOrder,
     EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
-    EachShiftIsAssignedToExactlyOnePerson,
     RespectPersonRestrictionsPerDay,
     RespectPersonRestrictionsPerShiftType,
     ThereShouldBeAtLeastXDaysBetweenOps,
@@ -74,7 +76,7 @@ def build_run_data(people, days, shifts, now):
         shifts_per_day = {day: list(shifts) for day in days}
         run_data = RunData.build(
             people=people,
-            max_shifts_per_person=1,
+            max_shifts_per_person=2,
             shifts_by_day=shifts_per_day,
             history=history,
             now=now,
@@ -96,10 +98,10 @@ def build_expressions(model, now):
     return build
 
 
-def test_each_shift_is_assigned_to_exactly_one_person(
+def test_each_day_shift_is_assigned_to_exactly_one_person_shift(
     model, build_run_data, build_expressions
 ):
-    constraint = EachShiftIsAssignedToExactlyOnePerson(priority=0)
+    constraint = EachDayShiftIsAssignedToExactlyOnePersonShift(priority=0)
 
     data = build_run_data()
     assignments = init_assignments(model, data)
@@ -141,6 +143,47 @@ def test_each_shift_is_assigned_to_exactly_one_person(
         ((0, 0, 0, 0), (0, 0, 1, 0), (0, 0, 2, 0), (0, 0, 3, 0), (0, 0, 4, 0)),
         expressions,
     )
+
+
+def test_each_person_shift_is_assigned_to_at_most_one_day_shift(
+    model, build_run_data, build_expressions
+):
+    constraint = EachPersonShiftIsAssignedToAtMostOneDayShift(priority=0)
+
+    data = build_run_data()
+    assignments = init_assignments(model, data)
+    expressions = build_expressions(constraint, data, assignments)
+
+    # No shift assigned
+    assert evaluate(assignments, (), expressions)
+
+    # Each person shift is assigned to different day shift
+    assert evaluate(assignments, ((0, 0, 0, 0), (0, 1, 1, 0)), expressions)
+
+    # Same person shift is assigned to two day shifts
+    assert not evaluate(assignments, ((0, 0, 0, 0), (0, 0, 1, 0)), expressions)
+
+
+def test_each_persons_shifts_are_filled_in_order(
+    model, build_run_data, build_expressions
+):
+    constraint = EachPersonsShiftsAreFilledInOrder(priority=0)
+
+    data = build_run_data()
+    assignments = init_assignments(model, data)
+    expressions = build_expressions(constraint, data, assignments)
+
+    # No shift assigned
+    assert evaluate(assignments, (), expressions)
+
+    # Both shifts assigned
+    assert evaluate(assignments, ((0, 0, 0, 0), (0, 1, 1, 0)), expressions)
+
+    # Shift 1 is assigned, but 2 is not
+    assert evaluate(assignments, ((0, 0, 0, 0),), expressions)
+
+    # Shift 2 is assigned, but 1 is not
+    assert not evaluate(assignments, ((0, 1, 0, 0),), expressions)
 
 
 def test_each_person_works_at_most_one_shift_per_day(

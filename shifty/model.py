@@ -1,12 +1,12 @@
 import logging
 from datetime import date
-from itertools import product
 from typing import Dict, List
 
 from ortools.sat.python import cp_model
 
 from .constraints import FIXED_CONSTRAINTS, Constraint
 from .data import History, Person, RunData, Shift
+from .objective import objective
 
 log = logging.getLogger(__name__)
 
@@ -36,6 +36,8 @@ def _run(data, constraints):
     for constraint in constraints:
         for expression in constraint.generate(assignments, data):
             model.Add(expression)
+
+    model.Maximize(objective(assignments, data))
 
     solver = cp_model.CpSolver()
     solver.Solve(model)

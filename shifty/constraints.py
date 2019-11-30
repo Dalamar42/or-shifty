@@ -37,7 +37,7 @@ class Constraint(metaclass=ABCMeta):
         return self.priority == other.priority
 
 
-class EachShiftIsAssignedToExactlyOnePerson(Constraint):
+class EachDayShiftIsAssignedToExactlyOnePersonShift(Constraint):
     def generate(
         self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
     ) -> Generator[LinearExpr, None, None]:
@@ -52,6 +52,47 @@ class EachShiftIsAssignedToExactlyOnePerson(Constraint):
                     )
                     == 1
                 )
+
+
+class EachPersonShiftIsAssignedToAtMostOneDayShift(Constraint):
+    def generate(
+        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
+    ) -> Generator[LinearExpr, None, None]:
+        for person, person_shifts in data.shifts_by_person.items():
+            for person_shift in person_shifts:
+                yield (
+                    sum(
+                        assignments[index.get()]
+                        for index in data.iter(
+                            person_filter=person, person_shift_filter=person_shift
+                        )
+                    )
+                    <= 1
+                )
+
+
+class EachPersonsShiftsAreFilledInOrder(Constraint):
+    def generate(
+        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
+    ) -> Generator[LinearExpr, None, None]:
+        for person, person_shifts in data.shifts_by_person.items():
+            for person_shift_idx, person_shift in enumerate(person_shifts):
+                shift_assigned = sum(
+                    assignments[index.get()]
+                    for index in data.iter(
+                        person_filter=person, person_shift_filter=person_shift
+                    )
+                )
+                next_idx = person_shift_idx + 1
+                for subsequent_person_shift in person_shifts[next_idx:]:
+                    subsequent_shift_assigned = sum(
+                        assignments[index.get()]
+                        for index in data.iter(
+                            person_filter=person,
+                            person_shift_filter=subsequent_person_shift,
+                        )
+                    )
+                    yield shift_assigned >= subsequent_shift_assigned
 
 
 class EachPersonWorksAtMostOneShiftPerAssignmentPeriod(Constraint):
@@ -125,9 +166,7 @@ class ThereShouldBeAtLeastXWeekendsBetweenWeekendOps(Constraint):
                 person.val
             )
 
-            if (sats_since_last is not None and sats_since_last < self._x) or (
-                suns_since_last is not None and suns_since_last < self._x
-            ):
+            if sats_since_last < self._x or suns_since_last < self._x:
                 for index in data.iter(person_filter=person, day_filter=day):
                     yield assignments[index.get()] == 0
 
@@ -197,7 +236,11 @@ class RespectPersonRestrictionsPerDay(Constraint):
         return self._restrictions == other._restrictions
 
 
-FIXED_CONSTRAINTS = [EachShiftIsAssignedToExactlyOnePerson(priority=0)]
+FIXED_CONSTRAINTS = [
+    EachDayShiftIsAssignedToExactlyOnePersonShift(priority=0),
+    EachPersonShiftIsAssignedToAtMostOneDayShift(priority=0),
+    EachPersonsShiftsAreFilledInOrder(priority=0),
+]
 
 
 CONSTRAINTS = {

@@ -3,6 +3,8 @@ from typing import Dict, List, NamedTuple
 
 from shifty.data import History, Person, ShiftType
 
+NEVER = date(1970, 1, 1)
+
 
 class HistoryMetrics(NamedTuple):
     num_of_shifts: Dict[ShiftType, Dict[Person, int]]
@@ -40,7 +42,7 @@ def _num_of_shifts_for_type(
 
 def _date_last_on_shift(history: History, people: List[Person]):
     people_seen = set()
-    date_last = {person: None for person in people}
+    date_last = {person: NEVER for person in people}
     for past_shift in history.past_shifts:
         if past_shift.person in date_last and past_shift.person not in people_seen:
             people_seen.add(past_shift.person)
@@ -63,7 +65,7 @@ def _free_days_of_type_since_last_on_shift_for_type(
     history: History, people: List[Person], now: date, shift_type: ShiftType
 ):
     people_seen = set()
-    free_since = {person: None for person in people}
+    free_since = {person: 1 << 16 for person in people}
     for past_shift in history.past_shifts:
         if (
             past_shift.counts_as(shift_type)

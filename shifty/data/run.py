@@ -46,8 +46,10 @@ class Index(NamedTuple):
 class RunData(NamedTuple):
     shifts_by_person: Dict[IndexedPerson, List[IndexedPersonShift]]
     shifts_by_day: Dict[IndexedDay, List[IndexedDayShift]]
+    max_shifts_per_person: int
     history: History
     history_metrics: HistoryMetrics
+    now: date
 
     @classmethod
     def build(
@@ -61,8 +63,10 @@ class RunData(NamedTuple):
         return cls(
             shifts_by_person=cls._index_shifts_by_person(people, max_shifts_per_person),
             shifts_by_day=cls._index_shifts_by_day(shifts_by_day),
+            max_shifts_per_person=max_shifts_per_person,
             history=history,
             history_metrics=HistoryMetrics.build(history, people, now),
+            now=now,
         )
 
     @staticmethod
