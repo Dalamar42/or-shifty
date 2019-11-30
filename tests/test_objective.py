@@ -8,7 +8,7 @@ from pytest import fixture
 from shifty.data import History, PastShift, Person, Shift
 from shifty.data.run import RunData
 from shifty.model import init_assignments
-from shifty.objective import SHIFT_TYPE_COEFFICIENT, objective
+from shifty.objective import RankingWeight
 
 
 def evaluate(assignments, chosen_assignments, expression):
@@ -96,11 +96,15 @@ def test_objective_function_for_weekdays(model, build_run_data, people, now, shi
 
     data = build_run_data(history=history)
     assignments = init_assignments(model, data)
-    objective_fn = objective(assignments, data)
+    objective = RankingWeight()
 
     assert (
-        evaluate(assignments, ((3, 0, 0, 0), (2, 1, 1, 0), (1, 0, 2, 0)), objective_fn)
-        == (107 + 2 + 104) * SHIFT_TYPE_COEFFICIENT
+        evaluate(
+            assignments,
+            ((3, 0, 0, 0), (2, 1, 1, 0), (1, 0, 2, 0)),
+            objective.objective(assignments, data),
+        )
+        == (107 + 2 + 104) * 1000
     )
 
 
@@ -151,11 +155,11 @@ def test_objective_function_for_entire_week(model, build_run_data, people, now, 
 
     data = build_run_data(history=history)
     assignments = init_assignments(model, data)
-    objective_fn = objective(assignments, data)
+    objective = RankingWeight()
 
-    expected_weekday_weight = (107 + 2 + 105) * SHIFT_TYPE_COEFFICIENT
-    expected_sat_weight = 105 * SHIFT_TYPE_COEFFICIENT
-    expected_sun_weight = 104 * SHIFT_TYPE_COEFFICIENT
+    expected_weekday_weight = (107 + 2 + 105) * 1000
+    expected_sat_weight = 105 * 1000
+    expected_sun_weight = 104 * 1000
 
     assert (
         evaluate(
@@ -166,7 +170,7 @@ def test_objective_function_for_entire_week(model, build_run_data, people, now, 
                 (2, 1, 1, 0),
                 (1, 0, 2, 0),
             ),
-            objective_fn,
+            objective.objective(assignments, data),
         )
         == expected_weekday_weight
     )
@@ -178,7 +182,7 @@ def test_objective_function_for_entire_week(model, build_run_data, people, now, 
                 # Saturdays
                 (3, 0, 4, 0),
             ),
-            objective_fn,
+            objective.objective(assignments, data),
         )
         == expected_sat_weight
     )
@@ -190,7 +194,7 @@ def test_objective_function_for_entire_week(model, build_run_data, people, now, 
                 # Sundays
                 (2, 0, 5, 0),
             ),
-            objective_fn,
+            objective.objective(assignments, data),
         )
         == expected_sun_weight
     )
@@ -208,7 +212,7 @@ def test_objective_function_for_entire_week(model, build_run_data, people, now, 
                 # Sundays
                 (2, 0, 5, 0),
             ),
-            objective_fn,
+            objective.objective(assignments, data),
         )
         == expected_weekday_weight + expected_sat_weight + expected_sun_weight
     )
