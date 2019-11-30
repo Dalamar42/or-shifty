@@ -36,34 +36,15 @@ def parse_args(args=None) -> Inputs:
         required=True,
         help="Path to json file containing history of past shifts",
     )
-    parser.add_argument(
-        "--date-from",
-        dest="date_from",
-        action="store",
-        required=True,
-        help="Date from which to assign ops (inclusive)",
-    )
-    parser.add_argument(
-        "--date-to",
-        dest="date_to",
-        action="store",
-        required=True,
-        help="Date to which to assign ops (inclusive)",
-    )
 
     parsed_args = parser.parse_args(args)
 
     return _parse_inputs(
-        config_path=parsed_args.config,
-        history_path=parsed_args.history,
-        date_from=datetime.fromisoformat(parsed_args.date_from).date(),
-        date_to=datetime.fromisoformat(parsed_args.date_to).date(),
+        config_path=parsed_args.config, history_path=parsed_args.history,
     )
 
 
-def _parse_inputs(
-    config_path: str, history_path: str, date_from: date, date_to: date
-) -> Inputs:
+def _parse_inputs(config_path: str, history_path: str) -> Inputs:
     with open(config_path, "r") as f:
         config = json.load(f)
 
@@ -73,7 +54,7 @@ def _parse_inputs(
     return Inputs(
         people=_parse_people(config),
         max_shifts_per_person=_parse_max_shifts_per_person(config),
-        shifts_by_day=_parse_shifts_by_day(config, date_from, date_to),
+        shifts_by_day=_parse_shifts_by_day(config),
         objective=_parse_objective(config),
         constraints=_parse_constraints(config),
         history=_parse_history(history),
@@ -89,7 +70,9 @@ def _parse_max_shifts_per_person(config) -> int:
     return int(config["max_shifts_per_person"])
 
 
-def _parse_shifts_by_day(config, date_from, date_to) -> Dict[date, List[Shift]]:
+def _parse_shifts_by_day(config) -> Dict[date, List[Shift]]:
+    date_from = datetime.fromisoformat(config["dates"]["from"]).date()
+    date_to = datetime.fromisoformat(config["dates"]["to"]).date()
     shifts = [Shift(name=shift["name"]) for shift in config["shifts"]]
     dates = [
         date_from + timedelta(days=i) for i in range((date_to - date_from).days + 1)

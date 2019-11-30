@@ -1,4 +1,8 @@
 {
+  "dates" : {
+    "from": "2019-11-29",
+    "to": "2019-12-01"
+  },
   "people": [
     {"name": "Admiral Ackbar"},
     {"name": "Mon Mothma"}

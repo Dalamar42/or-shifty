@@ -11,23 +11,10 @@ from shifty.data import PastShift, Person, Shift
 
 CONFIG_FILE_PATH = "tests/test_files/config.json"
 HISTORY_FILE_PATH = "tests/test_files/history.json"
-DATE_FROM = date(2019, 11, 29)
-DATE_TO = date(2019, 12, 1)
 
 
 def test_parsing_inputs():
-    inputs = parse_args(
-        [
-            "--config",
-            CONFIG_FILE_PATH,
-            "--history",
-            HISTORY_FILE_PATH,
-            "--date-from",
-            DATE_FROM.isoformat(),
-            "--date-to",
-            DATE_TO.isoformat(),
-        ]
-    )
+    inputs = parse_args(["--config", CONFIG_FILE_PATH, "--history", HISTORY_FILE_PATH])
 
     assert set(inputs.people) == {
         Person(name="Admiral Ackbar"),
