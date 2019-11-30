@@ -10,8 +10,8 @@ from shifty.constraints import (
 )
 from shifty.shift import AssignedShift
 
-CONFIG_FILE_PATH = "tests/test_files/config.json"
-HISTORY_FILE_PATH = "tests/test_files/history.json"
+CONFIG_FILE_PATH = "tests/test_files/cli/config.json"
+HISTORY_FILE_PATH = "tests/test_files/cli/history.json"
 
 
 def test_parsing_inputs():
