@@ -253,26 +253,26 @@ def test_respect_person_permissions_per_shift_type(
     data = build_run_data()
 
     constraint = RespectPersonRestrictionsPerShiftType(
-        priority=0, forbidden_by_shift_type={"SATURDAY": ["A"]}
+        priority=0, forbidden_by_shift_type={"SATURDAY": ["A"], "SUNDAY": ["A", "B"]}
     )
 
     assignments = init_assignments(model, data)
     expressions = build_expressions(constraint, data, assignments)
 
-    # Second person can be assigned to both Sat and Sun
+    # Second person can be assigned to Sat, but not Sun
     assert evaluate(assignments, ((1, 0, 4, 0),), expressions)
-    assert evaluate(assignments, ((1, 0, 5, 0),), expressions)
+    assert not evaluate(assignments, ((1, 0, 5, 0),), expressions)
 
-    # First person can be assigned to Sun, but not Sat
+    # First person can be assigned to neither Sat nor Sun
     assert not evaluate(assignments, ((0, 0, 4, 0),), expressions)
-    assert evaluate(assignments, ((0, 0, 5, 0),), expressions)
+    assert not evaluate(assignments, ((0, 0, 5, 0),), expressions)
 
 
 def test_respect_person_permissions_per_day(model, build_run_data, build_expressions):
     data = build_run_data()
 
     constraint = RespectPersonRestrictionsPerDay(
-        priority=0, restrictions={"A": ["2019-01-01"]}
+        priority=0, restrictions={"A": ["2019-01-01", "2019-01-02"]}
     )
 
     assignments = init_assignments(model, data)
@@ -282,7 +282,8 @@ def test_respect_person_permissions_per_day(model, build_run_data, build_express
     for day in range(0, 5):
         assert evaluate(assignments, ((1, 0, day, 0),), expressions)
 
-    # First person can be assigned to every day, but Monday
+    # First person can be assigned to every day, but the first two
     assert not evaluate(assignments, ((0, 0, 0, 0),), expressions)
-    for day in range(1, 5):
+    assert not evaluate(assignments, ((0, 0, 1, 0),), expressions)
+    for day in range(2, 5):
         assert evaluate(assignments, ((0, 0, day, 0),), expressions)

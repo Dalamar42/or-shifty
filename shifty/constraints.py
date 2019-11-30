@@ -228,9 +228,10 @@ class RespectPersonRestrictionsPerDay(Constraint):
         super().__init__(**kwargs)
         assert restrictions is not None
         self._restrictions = {
-            person_name: {datetime.fromisoformat(weekday).date()}
+            person_name: {
+                datetime.fromisoformat(weekday).date() for weekday in weekdays
+            }
             for person_name, weekdays in restrictions.items()
-            for weekday in weekdays
         }
 
     def generate(
