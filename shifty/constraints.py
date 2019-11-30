@@ -150,7 +150,8 @@ class ThereShouldBeAtLeastXWeekendsBetweenWeekendOps(Constraint):
         for person, day in product(
             data.shifts_by_person.keys(), data.shifts_by_day.keys()
         ):
-            is_weekend = day.val.weekday() in {5, 6}
+            day_shift_type = ShiftType.from_day(day.val)
+            is_weekend = day_shift_type in {ShiftType.SATURDAY, ShiftType.SUNDAY}
             if not is_weekend:
                 continue
 

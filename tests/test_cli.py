@@ -53,16 +53,6 @@ def test_parsing_inputs():
         PastShift.build(Person("Admiral Ackbar"), date(2019, 11, 27), Shift("ops")),
         PastShift.build(Person("Admiral Ackbar"), date(2019, 11, 26), Shift("ops")),
         PastShift.build(Person("Mon Mothma"), date(2019, 11, 25), Shift("ops")),
-        PastShift.build(
-            Person("Mon Mothma"),
-            date(2019, 11, 24),
-            Shift("ops"),
-            override_as_sunday=True,
-        ),
-        PastShift.build(
-            Person("Admiral Ackbar"),
-            date(2019, 11, 23),
-            Shift("ops"),
-            override_as_saturday=True,
-        ),
+        PastShift.build(Person("Mon Mothma"), date(2019, 11, 24), Shift("ops")),
+        PastShift.build(Person("Admiral Ackbar"), date(2019, 11, 23), Shift("ops")),
     )

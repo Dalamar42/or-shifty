@@ -120,8 +120,6 @@ def _parse_history(history) -> History:
             person=Person(name=shift["person"]),
             day=day,
             shift=Shift(name=shift["shift"]),
-            override_as_saturday=day.weekday() == 5,
-            override_as_sunday=day.weekday() == 6,
         )
         shifts.append(past_shift)
 

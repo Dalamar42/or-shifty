@@ -34,7 +34,7 @@ def _num_of_shifts_for_type(
 ):
     shifts = {person: 0 for person in people}
     for past_shift in history.past_shifts:
-        if past_shift.counts_as(shift_type) and past_shift.person in shifts:
+        if past_shift.shift_type is shift_type and past_shift.person in shifts:
             shifts.setdefault(past_shift.person, 0)
             shifts[past_shift.person] += 1
     return shifts
@@ -68,7 +68,7 @@ def _free_days_of_type_since_last_on_shift_for_type(
     free_since = {person: 1 << 16 for person in people}
     for past_shift in history.past_shifts:
         if (
-            past_shift.counts_as(shift_type)
+            past_shift.shift_type is shift_type
             and past_shift.person in free_since
             and past_shift.person not in people_seen
         ):
