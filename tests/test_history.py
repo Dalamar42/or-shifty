@@ -27,7 +27,7 @@ def test_num_of_shifts():
     metrics = HistoryMetrics.build(history, [person_a, person_b], date(2019, 9, 5))
 
     assert metrics.num_of_shifts == {
-        ShiftType.NORMAL: {person_a: 0, person_b: 1},
+        ShiftType.WEEKDAY: {person_a: 0, person_b: 1},
         ShiftType.SATURDAY: {person_a: 2, person_b: 0},
         ShiftType.SUNDAY: {person_a: 1, person_b: 1},
     }
@@ -82,7 +82,7 @@ def test_free_days_of_type_since_last_on_shift():
     metrics = HistoryMetrics.build(history, [person_a, person_b], date(2019, 9, 16))
 
     assert metrics.free_days_of_shift_type_since_last_on_shift == {
-        ShiftType.NORMAL: {person_a: 9, person_b: None},
+        ShiftType.WEEKDAY: {person_a: 9, person_b: None},
         ShiftType.SATURDAY: {person_a: 2, person_b: 1},
         ShiftType.SUNDAY: {person_a: None, person_b: 2},
     }

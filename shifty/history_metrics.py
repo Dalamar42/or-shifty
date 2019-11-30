@@ -76,7 +76,7 @@ def _free_days_of_type_since_last_on_shift_for_type(
             day_gen = (
                 from_date + timedelta(x + 1) for x in range((now - from_date).days)
             )
-            if shift_type is ShiftType.NORMAL:
+            if shift_type is ShiftType.WEEKDAY:
                 day_filter = lambda day: day.weekday() < 5
             elif shift_type is ShiftType.SATURDAY:
                 day_filter = lambda day: day.weekday() == 5

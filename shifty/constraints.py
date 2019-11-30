@@ -149,17 +149,19 @@ class RespectPersonRestrictionsPerShiftType(Constraint):
     ) -> Generator[LinearExpr, None, None]:
         for day, shifts in data.shifts_by_day.items():
             for person in data.people:
-                if day.val.weekday() == 5 and person.val.name in self._forbidden_by_shift_type.get(
-                    ShiftType.SATURDAY, set()
-                ):
-                    for shift in shifts:
-                        yield assignments[(person.index, day.index, shift.index)] == 0
+                yield from self._generate_for_type(
+                    assignments, day, person, shifts, ShiftType.SATURDAY
+                )
+                yield from self._generate_for_type(
+                    assignments, day, person, shifts, ShiftType.SUNDAY
+                )
 
-                if day.val.weekday() == 6 and person.val.name in self._forbidden_by_shift_type.get(
-                    ShiftType.SUNDAY, set()
-                ):
-                    for shift in shifts:
-                        yield assignments[(person.index, day.index, shift.index)] == 0
+    def _generate_for_type(self, assignments, day, person, shifts, shift_type):
+        if shift_type.is_of_type(
+            day.val
+        ) and person.val.name in self._forbidden_by_shift_type.get(shift_type, set()):
+            for shift in shifts:
+                yield assignments[(person.index, day.index, shift.index)] == 0
 
     def __eq__(self, other):
         if not super().__eq__(other):
