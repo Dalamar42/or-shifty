@@ -269,7 +269,9 @@ def test_respect_person_permissions_per_shift_type(
 def test_respect_person_permissions_per_day(model, build_run_data, build_expressions):
     data = build_run_data()
 
-    constraint = RespectPersonRestrictionsPerDay(priority=0, restrictions={"A": [1]})
+    constraint = RespectPersonRestrictionsPerDay(
+        priority=0, restrictions={"A": ["2019-01-01"]}
+    )
 
     assignments = init_assignments(model, data)
     expressions = build_expressions(constraint, data, assignments)

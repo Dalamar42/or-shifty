@@ -12,4 +12,4 @@
 - [ ] Print violated constraints when making a decision
 - [ ] Print stats when making a decision
 - [X] Add constraint for max shifts per person
-- [ ] Make per day restrictions dates
+- [X] Make per day restrictions dates

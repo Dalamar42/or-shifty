@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from datetime import datetime
 from itertools import product
 from typing import Dict, Generator, List, Optional, Tuple
 
@@ -224,11 +225,13 @@ class RespectPersonRestrictionsPerShiftType(Constraint):
 
 
 class RespectPersonRestrictionsPerDay(Constraint):
-    def __init__(self, restrictions: Dict[str, List[int]] = None, **kwargs):
+    def __init__(self, restrictions: Dict[str, List[str]] = None, **kwargs):
         super().__init__(**kwargs)
         assert restrictions is not None
         self._restrictions = {
-            person_name: set(weekdays) for person_name, weekdays in restrictions.items()
+            person_name: {datetime.fromisoformat(weekday).date()}
+            for person_name, weekdays in restrictions.items()
+            for weekday in weekdays
         }
 
     def generate(
@@ -237,7 +240,7 @@ class RespectPersonRestrictionsPerDay(Constraint):
         for person, day in product(
             data.shifts_by_person.keys(), data.shifts_by_day.keys()
         ):
-            if day.val.weekday() in self._restrictions.get(person.val.name, set()):
+            if day.val in self._restrictions.get(person.val.name, set()):
                 for index in data.iter(person_filter=person, day_filter=day):
                     yield assignments[index.get()] == 0
 

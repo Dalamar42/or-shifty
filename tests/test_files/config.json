@@ -28,7 +28,7 @@
       "type": "RespectPersonRestrictionsPerDay",
       "name": "Holidays",
       "priority": 3,
-      "params": {"restrictions": {"Admiral Ackbar": [1]}}
+      "params": {"restrictions": {"Admiral Ackbar": ["2019-11-01"]}}
     }
   ]
 }

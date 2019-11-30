@@ -45,7 +45,7 @@ def test_parsing_inputs():
             priority=2, forbidden_by_shift_type={"SATURDAY": ["Admiral Ackbar"]}
         ),
         RespectPersonRestrictionsPerDay(
-            priority=3, name="Holidays", restrictions={"Admiral Ackbar": [1]}
+            priority=3, name="Holidays", restrictions={"Admiral Ackbar": ["2019-11-01"]}
         ),
     ]
     assert inputs.history.past_shifts == (
