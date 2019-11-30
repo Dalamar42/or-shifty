@@ -4,6 +4,11 @@ import sys
 from shifty.cli import parse_args
 from shifty.model import assign
 
+logging.basicConfig(
+    stream=sys.stderr,
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
 log = logging.getLogger(__name__)
 
 
@@ -25,9 +30,7 @@ def ops():
 
 
 def configure_logging(verbose=False):
-    logging.basicConfig(
-        stream=sys.stderr, level=logging.DEBUG if verbose else logging.INFO,
-    )
+    logging.getLogger().setLevel(logging.DEBUG if verbose else logging.INFO)
 
 
 def main():

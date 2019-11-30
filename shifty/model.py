@@ -30,7 +30,10 @@ def assign(
 ):
     constraints = list(constraints) + FIXED_CONSTRAINTS
     constraints = sorted(constraints, key=lambda c: c.priority)
+
     now = now or date.today()
+    log.debug("Setting now to %s", now)
+
     data = Config.build(people, max_shifts_per_person, shifts_by_day, history, now)
     log.info(str(data.history_metrics))
 
@@ -52,6 +55,7 @@ def _drop_least_important_constraints(constraints):
     priority_to_drop = max(constraint.priority for constraint in constraints)
     if priority_to_drop == 0:
         return None
+    log.debug("Dropping constraints with priority %s", priority_to_drop)
     constraints_to_drop = [
         constraint
         for constraint in constraints
@@ -72,6 +76,7 @@ def _run(data, objective, constraints):
     assignments = init_assignments(model, data)
 
     for constraint in constraints:
+        log.debug("Adding constraint %s", constraint)
         for expression in constraint.generate(assignments, data):
             model.Add(expression)
 
