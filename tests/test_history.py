@@ -1,6 +1,6 @@
 from datetime import date
 
-from shifty.data import History, PastShift, Person, Shift, ShiftType
+from shifty.data import History, PastShift, PastShiftOffset, Person, Shift, ShiftType
 from shifty.history_metrics import NEVER, HistoryMetrics
 
 
@@ -26,6 +26,42 @@ def test_num_of_shifts():
         ShiftType.WEEKDAY: {person_a: 2, person_b: 1},
         ShiftType.SATURDAY: {person_a: 1, person_b: 0},
         ShiftType.SUNDAY: {person_a: 0, person_b: 1},
+    }
+
+
+def test_num_of_shifts_with_offsets():
+    person_a = Person("a")
+    person_b = Person("b")
+    person_c = Person("c")
+
+    history = History.build(
+        past_shifts=[
+            PastShift.build(person_a, date(2019, 8, 31), Shift("shift")),  # Sat
+            PastShift.build(person_b, date(2019, 9, 1), Shift("shift")),  # Sun
+            PastShift.build(person_a, date(2019, 9, 2), Shift("shift")),  # Mon
+            PastShift.build(person_b, date(2019, 9, 3), Shift("shift")),  # Tue
+            PastShift.build(person_a, date(2019, 9, 4), Shift("shift")),  # Wed
+            PastShift.build(person_c, date(2019, 9, 5), Shift("shift")),  # Thu
+        ],
+        offsets=[
+            PastShiftOffset.build(
+                person=person_a, shift_type=ShiftType.WEEKDAY, offset=2
+            ),
+            PastShiftOffset.build(
+                person=person_b, shift_type=ShiftType.SATURDAY, offset=1
+            ),
+            PastShiftOffset.build(
+                person=person_c, shift_type=ShiftType.SUNDAY, offset=5
+            ),
+        ],
+    )
+
+    metrics = HistoryMetrics.build(history, [person_a, person_b], date(2019, 9, 5))
+
+    assert metrics.num_of_shifts == {
+        ShiftType.WEEKDAY: {person_a: 4, person_b: 1},
+        ShiftType.SATURDAY: {person_a: 1, person_b: 1},
+        ShiftType.SUNDAY: {person_a: 0, person_b: 1, person_c: 5},
     }
 
 

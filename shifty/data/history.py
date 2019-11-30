@@ -18,10 +18,23 @@ class PastShift(NamedTuple):
         return ShiftType.from_day(self.day)
 
 
-class History(NamedTuple):
-    past_shifts: Tuple[PastShift, ...]
+class PastShiftOffset(NamedTuple):
+    person: Person
+    shift_type: ShiftType
+    offset: int
 
     @classmethod
-    def build(cls, past_shifts: List[PastShift] = ()):
+    def build(cls, person, shift_type, offset):
+        return cls(person=person, shift_type=shift_type, offset=offset)
+
+
+class History(NamedTuple):
+    past_shifts: Tuple[PastShift, ...]
+    offsets: Tuple[PastShiftOffset, ...]
+
+    @classmethod
+    def build(
+        cls, past_shifts: List[PastShift] = (), offsets: List[PastShiftOffset] = ()
+    ):
         past_shifts = sorted(past_shifts, key=lambda ps: ps.day, reverse=True)
-        return cls(past_shifts=tuple(past_shifts))
+        return cls(past_shifts=tuple(past_shifts), offsets=tuple(offsets))

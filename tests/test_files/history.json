@@ -6,5 +6,10 @@
     {"person": "Mon Mothma", "date": "2019-11-25", "shift": "ops"},
     {"person": "Mon Mothma", "date": "2019-11-24", "shift": "ops"},
     {"person": "Admiral Ackbar", "date": "2019-11-23", "shift": "ops"}
+  ],
+  "offsets": [
+    {"person": "Admiral Ackbar", "shift_type": "WEEKDAY", "offset": 2},
+    {"person": "Admiral Ackbar", "shift_type": "SUNDAY", "offset": 1},
+    {"person": "Mon Mothma", "shift_type": "SATURDAY", "offset": 3}
   ]
 }

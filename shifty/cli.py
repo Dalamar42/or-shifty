@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 from typing import Dict, List, NamedTuple
 
 from .constraints import CONSTRAINTS, Constraint
-from .data import History, PastShift, Person, Shift
+from .data import History, PastShift, PastShiftOffset, Person, Shift, ShiftType
 from .objective import OBJECTIVE_FUNCTIONS, Objective
 
 
@@ -113,7 +113,17 @@ def _parse_constraints(config) -> List[Constraint]:
 
 
 def _parse_history(history) -> History:
+    offsets = []
     shifts = []
+
+    for offset in history["offsets"]:
+        past_shift_offset = PastShiftOffset.build(
+            person=Person(name=offset["person"]),
+            shift_type=ShiftType[offset["shift_type"]],
+            offset=int(offset["offset"]),
+        )
+        offsets.append(past_shift_offset)
+
     for shift in history["shifts"]:
         day = datetime.fromisoformat(shift["date"]).date()
         past_shift = PastShift.build(
@@ -123,4 +133,4 @@ def _parse_history(history) -> History:
         )
         shifts.append(past_shift)
 
-    return History.build(shifts)
+    return History.build(past_shifts=shifts, offsets=offsets)
