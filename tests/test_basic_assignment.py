@@ -1,9 +1,5 @@
 from datetime import date
 
-from shifty.constraints import (
-    EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
-    ThereShouldBeAtLeastXDaysBetweenOps,
-)
 from shifty.data import Person, Shift
 from shifty.model import assign
 
@@ -21,9 +17,5 @@ def test_basic_assignment():
             date(2019, 1, 6): [Shift(name="shift")],
             date(2019, 1, 7): [Shift(name="shift")],
         },
-        constraints=[
-            EachPersonWorksAtMostOneShiftPerAssignmentPeriod(priority=0),
-            ThereShouldBeAtLeastXDaysBetweenOps(priority=1, x=4),
-        ],
     )
     assert len(list(solution)) == 7

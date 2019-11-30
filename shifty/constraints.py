@@ -95,7 +95,12 @@ class EachPersonsShiftsAreFilledInOrder(Constraint):
                     yield shift_assigned >= subsequent_shift_assigned
 
 
-class EachPersonWorksAtMostOneShiftPerAssignmentPeriod(Constraint):
+class EachPersonWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
+    def __init__(self, x=None, **kwargs):
+        super().__init__(**kwargs)
+        assert x is not None
+        self._x = x
+
     def generate(
         self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: RunData
     ) -> Generator[LinearExpr, None, None]:
@@ -107,6 +112,11 @@ class EachPersonWorksAtMostOneShiftPerAssignmentPeriod(Constraint):
                 )
                 <= 1
             )
+
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        return self._x == other._x
 
 
 class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
@@ -247,7 +257,7 @@ FIXED_CONSTRAINTS = [
 CONSTRAINTS = {
     constraint.__name__: constraint
     for constraint in [
-        EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
+        EachPersonWorksAtMostXShiftsPerAssignmentPeriod,
         ThereShouldBeAtLeastXDaysBetweenOps,
         ThereShouldBeAtLeastXWeekendsBetweenWeekendOps,
         RespectPersonRestrictionsPerShiftType,

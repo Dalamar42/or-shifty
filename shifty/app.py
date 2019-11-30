@@ -19,7 +19,9 @@ def ops():
     )
 
     for person, person_shift, day, day_shift in solution:
-        print(f"{person.name} works shift {person_shift + 1} on {day} / {day_shift.name}")
+        print(
+            f"{person.name} works shift {person_shift + 1} on {day} / {day_shift.name}"
+        )
     print()
 
 

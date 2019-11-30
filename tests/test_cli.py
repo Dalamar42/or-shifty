@@ -2,7 +2,7 @@ from datetime import date
 
 from shifty.cli import parse_args
 from shifty.constraints import (
-    EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
+    EachPersonWorksAtMostXShiftsPerAssignmentPeriod,
     RespectPersonRestrictionsPerDay,
     RespectPersonRestrictionsPerShiftType,
     ThereShouldBeAtLeastXDaysBetweenOps,
@@ -39,7 +39,7 @@ def test_parsing_inputs():
         date(2019, 12, 1): [Shift(name="ops")],
     }
     assert inputs.constraints == [
-        EachPersonWorksAtMostOneShiftPerAssignmentPeriod(priority=0),
+        EachPersonWorksAtMostXShiftsPerAssignmentPeriod(priority=0, x=1),
         ThereShouldBeAtLeastXDaysBetweenOps(priority=1, x=4),
         RespectPersonRestrictionsPerShiftType(
             priority=2, forbidden_by_shift_type={"SATURDAY": ["Admiral Ackbar"]}

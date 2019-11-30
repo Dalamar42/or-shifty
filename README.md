@@ -11,5 +11,5 @@
 - [X] Support holidays constraint
 - [ ] Print violated constraints when making a decision
 - [ ] Print stats when making a decision
-- [ ] Add constraint for max shifts per person
+- [X] Add constraint for max shifts per person
 - [ ] Make per day restrictions dates

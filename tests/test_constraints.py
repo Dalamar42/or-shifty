@@ -9,7 +9,7 @@ from shifty.constraints import (
     EachDayShiftIsAssignedToExactlyOnePersonShift,
     EachPersonShiftIsAssignedToAtMostOneDayShift,
     EachPersonsShiftsAreFilledInOrder,
-    EachPersonWorksAtMostOneShiftPerAssignmentPeriod,
+    EachPersonWorksAtMostXShiftsPerAssignmentPeriod,
     RespectPersonRestrictionsPerDay,
     RespectPersonRestrictionsPerShiftType,
     ThereShouldBeAtLeastXDaysBetweenOps,
@@ -186,10 +186,10 @@ def test_each_persons_shifts_are_filled_in_order(
     assert not evaluate(assignments, ((0, 1, 0, 0),), expressions)
 
 
-def test_each_person_works_at_most_one_shift_per_day(
+def test_each_person_works_at_most_x_shifts_per_day(
     model, build_run_data, build_expressions
 ):
-    constraint = EachPersonWorksAtMostOneShiftPerAssignmentPeriod(priority=0)
+    constraint = EachPersonWorksAtMostXShiftsPerAssignmentPeriod(priority=0, x=1)
 
     data = build_run_data()
     assignments = init_assignments(model, data)

@@ -20,7 +20,7 @@ def assign(
     objective: Objective = RankingWeight(),
     constraints: List[Constraint] = tuple(),
 ):
-    constraints += FIXED_CONSTRAINTS
+    constraints = list(constraints) + FIXED_CONSTRAINTS
     constraints = sorted(constraints, key=lambda c: c.priority)
     now = now or date.today()
     data = RunData.build(people, max_shifts_per_person, shifts_by_day, history, now)

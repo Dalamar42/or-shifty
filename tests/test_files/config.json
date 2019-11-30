@@ -10,8 +10,9 @@
   "objective": "RankingWeight",
   "constraints": [
     {
-      "type": "EachPersonWorksAtMostOneShiftPerAssignmentPeriod",
-      "priority": 0
+      "type": "EachPersonWorksAtMostXShiftsPerAssignmentPeriod",
+      "priority": 0,
+      "params": {"x":  1}
     },
     {
       "type": "ThereShouldBeAtLeastXDaysBetweenOps",
