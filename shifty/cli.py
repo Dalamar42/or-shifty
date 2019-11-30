@@ -18,6 +18,7 @@ class Inputs(NamedTuple):
     constraints: List[Constraint]
     history: History
     now: date
+    verbose: bool
 
 
 def parse_args(args=None) -> Inputs:
@@ -38,15 +39,24 @@ def parse_args(args=None) -> Inputs:
         required=True,
         help="Path to json file containing history of past shifts",
     )
+    parser.add_argument(
+        "-v",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Change the log level to debug",
+    )
 
     parsed_args = parser.parse_args(args)
 
     return _parse_inputs(
-        config_path=parsed_args.config, history_path=parsed_args.history,
+        config_path=parsed_args.config,
+        history_path=parsed_args.history,
+        verbose=parsed_args.verbose,
     )
 
 
-def _parse_inputs(config_path: str, history_path: str) -> Inputs:
+def _parse_inputs(config_path: str, history_path: str, verbose: bool) -> Inputs:
     with open(config_path, "r") as f:
         config = json.load(f)
 
@@ -61,6 +71,7 @@ def _parse_inputs(config_path: str, history_path: str) -> Inputs:
         constraints=_parse_constraints(config),
         history=_parse_history(history),
         now=date.today(),
+        verbose=verbose,
     )
 
 
