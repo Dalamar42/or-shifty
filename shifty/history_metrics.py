@@ -1,7 +1,9 @@
 from datetime import date, timedelta
 from typing import Dict, List, NamedTuple
 
-from shifty.data import History, Person, ShiftType
+from shifty.base_types import Person
+from shifty.history import History
+from shifty.shift import ShiftType
 
 NEVER = date(1970, 1, 1)
 

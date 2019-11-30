@@ -5,6 +5,8 @@ from unittest.mock import Mock
 from ortools.sat.python.cp_model import CpModel, EvaluateLinearExpr
 from pytest import fixture
 
+from shifty.base_types import DayShift, Person
+from shifty.config import Config
 from shifty.constraints import (
     EachDayShiftIsAssignedToExactlyOnePersonShift,
     EachPersonShiftIsAssignedToAtMostOneDayShift,
@@ -15,9 +17,9 @@ from shifty.constraints import (
     ThereShouldBeAtLeastXDaysBetweenOps,
     ThereShouldBeAtLeastXWeekendsBetweenWeekendOps,
 )
-from shifty.data import History, PastShift, Person, Shift
-from shifty.data.run import RunData
+from shifty.history import History
 from shifty.model import init_assignments
+from shifty.shift import AssignedShift
 
 
 def evaluate(assignments, chosen_assignments, expressions):
@@ -62,7 +64,7 @@ def days():
 
 @fixture
 def shifts():
-    return [Shift(name="shift")]
+    return [DayShift(name="shift")]
 
 
 @fixture
@@ -74,7 +76,7 @@ def now():
 def build_run_data(people, days, shifts, now):
     def build(history=History.build()):
         shifts_per_day = {day: list(shifts) for day in days}
-        run_data = RunData.build(
+        run_data = Config.build(
             people=people,
             max_shifts_per_person=2,
             shifts_by_day=shifts_per_day,
@@ -208,7 +210,7 @@ def test_there_should_be_at_least_x_days_between_ops(
     constraint = ThereShouldBeAtLeastXDaysBetweenOps(priority=0, x=1)
 
     history = History.build(
-        past_shifts=[PastShift.build(people[0], date(2018, 12, 31), shifts[0])]
+        past_shifts=[AssignedShift.build(people[0], date(2018, 12, 31), shifts[0])]
     )
     data = build_run_data(history=history)
     assignments = init_assignments(model, data)
@@ -228,8 +230,8 @@ def test_there_should_be_at_least_x_weekends_between_weekend_ops(
 
     history = History.build(
         past_shifts=[
-            PastShift.build(people[0], date(2018, 12, 29), shifts[0]),
-            PastShift.build(people[1], date(2018, 12, 23), shifts[0]),
+            AssignedShift.build(people[0], date(2018, 12, 29), shifts[0]),
+            AssignedShift.build(people[1], date(2018, 12, 23), shifts[0]),
         ]
     )
     data = build_run_data(history=history)

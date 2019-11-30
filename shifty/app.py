@@ -1,7 +1,7 @@
 import logging
 
-from .cli import parse_args
-from .model import assign
+from shifty.cli import parse_args
+from shifty.model import assign
 
 log = logging.getLogger(__name__)
 
@@ -18,11 +18,8 @@ def ops():
         constraints=inputs.constraints,
     )
 
-    for person, person_shift, day, day_shift in solution:
-        print(
-            f"{person.name} works shift {person_shift + 1} on {day} / {day_shift.name}"
-        )
-    print()
+    for shift in solution:
+        log.info(str(shift))
 
 
 def main():

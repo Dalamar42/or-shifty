@@ -1,5 +1,6 @@
 from datetime import date
 
+from shifty.base_types import DayShift, Person
 from shifty.cli import parse_args
 from shifty.constraints import (
     EachPersonWorksAtMostXShiftsPerAssignmentPeriod,
@@ -7,7 +8,7 @@ from shifty.constraints import (
     RespectPersonRestrictionsPerShiftType,
     ThereShouldBeAtLeastXDaysBetweenOps,
 )
-from shifty.data import PastShift, Person, Shift
+from shifty.shift import AssignedShift
 
 CONFIG_FILE_PATH = "tests/test_files/config.json"
 HISTORY_FILE_PATH = "tests/test_files/history.json"
@@ -21,9 +22,9 @@ def test_parsing_inputs():
         Person(name="Mon Mothma"),
     }
     assert inputs.shifts_by_day == {
-        date(2019, 11, 29): [Shift(name="ops")],
-        date(2019, 11, 30): [Shift(name="ops")],
-        date(2019, 12, 1): [Shift(name="ops")],
+        date(2019, 11, 29): [DayShift(name="ops")],
+        date(2019, 11, 30): [DayShift(name="ops")],
+        date(2019, 12, 1): [DayShift(name="ops")],
     }
     assert inputs.constraints == [
         EachPersonWorksAtMostXShiftsPerAssignmentPeriod(priority=0, x=1),
@@ -36,10 +37,18 @@ def test_parsing_inputs():
         ),
     ]
     assert inputs.history.past_shifts == (
-        PastShift.build(Person("Admiral Ackbar"), date(2019, 11, 28), Shift("ops")),
-        PastShift.build(Person("Admiral Ackbar"), date(2019, 11, 27), Shift("ops")),
-        PastShift.build(Person("Admiral Ackbar"), date(2019, 11, 26), Shift("ops")),
-        PastShift.build(Person("Mon Mothma"), date(2019, 11, 25), Shift("ops")),
-        PastShift.build(Person("Mon Mothma"), date(2019, 11, 24), Shift("ops")),
-        PastShift.build(Person("Admiral Ackbar"), date(2019, 11, 23), Shift("ops")),
+        AssignedShift.build(
+            Person("Admiral Ackbar"), date(2019, 11, 28), DayShift("ops")
+        ),
+        AssignedShift.build(
+            Person("Admiral Ackbar"), date(2019, 11, 27), DayShift("ops")
+        ),
+        AssignedShift.build(
+            Person("Admiral Ackbar"), date(2019, 11, 26), DayShift("ops")
+        ),
+        AssignedShift.build(Person("Mon Mothma"), date(2019, 11, 25), DayShift("ops")),
+        AssignedShift.build(Person("Mon Mothma"), date(2019, 11, 24), DayShift("ops")),
+        AssignedShift.build(
+            Person("Admiral Ackbar"), date(2019, 11, 23), DayShift("ops")
+        ),
     )

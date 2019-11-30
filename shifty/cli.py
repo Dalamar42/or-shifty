@@ -3,15 +3,17 @@ import json
 from datetime import date, datetime, timedelta
 from typing import Dict, List, NamedTuple
 
-from .constraints import CONSTRAINTS, Constraint
-from .data import History, PastShift, PastShiftOffset, Person, Shift, ShiftType
-from .objective import OBJECTIVE_FUNCTIONS, Objective
+from shifty.base_types import DayShift, Person
+from shifty.constraints import CONSTRAINTS, Constraint
+from shifty.history import History, PastShiftOffset
+from shifty.objective import OBJECTIVE_FUNCTIONS, Objective
+from shifty.shift import AssignedShift, ShiftType
 
 
 class Inputs(NamedTuple):
     people: List[Person]
     max_shifts_per_person: int
-    shifts_by_day: Dict[date, List[Shift]]
+    shifts_by_day: Dict[date, List[DayShift]]
     objective: Objective
     constraints: List[Constraint]
     history: History
@@ -70,10 +72,10 @@ def _parse_max_shifts_per_person(config) -> int:
     return int(config["max_shifts_per_person"])
 
 
-def _parse_shifts_by_day(config) -> Dict[date, List[Shift]]:
+def _parse_shifts_by_day(config) -> Dict[date, List[DayShift]]:
     date_from = datetime.fromisoformat(config["dates"]["from"]).date()
     date_to = datetime.fromisoformat(config["dates"]["to"]).date()
-    shifts = [Shift(name=shift["name"]) for shift in config["shifts"]]
+    shifts = [DayShift(name=shift["name"]) for shift in config["shifts"]]
     dates = [
         date_from + timedelta(days=i) for i in range((date_to - date_from).days + 1)
     ]
@@ -109,10 +111,10 @@ def _parse_history(history) -> History:
 
     for shift in history["shifts"]:
         day = datetime.fromisoformat(shift["date"]).date()
-        past_shift = PastShift.build(
+        past_shift = AssignedShift.build(
             person=Person(name=shift["person"]),
             day=day,
-            shift=Shift(name=shift["shift"]),
+            day_shift=DayShift(name=shift["shift"]),
         )
         shifts.append(past_shift)
 

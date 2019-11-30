@@ -5,10 +5,12 @@ from unittest.mock import Mock
 from ortools.sat.python.cp_model import CpModel, EvaluateLinearExpr
 from pytest import fixture
 
-from shifty.data import History, PastShift, Person, Shift
-from shifty.data.run import RunData
+from shifty.base_types import DayShift, Person
+from shifty.config import Config
+from shifty.history import History
 from shifty.model import init_assignments
 from shifty.objective import RankingWeight
+from shifty.shift import AssignedShift
 
 
 def evaluate(assignments, chosen_assignments, expression):
@@ -45,7 +47,7 @@ def days():
 
 @fixture
 def shifts():
-    return [Shift(name="shift-1")]
+    return [DayShift(name="shift-1")]
 
 
 @fixture
@@ -57,7 +59,7 @@ def now():
 def build_run_data(people, days, shifts, now):
     def build(history=History.build()):
         shifts_per_day = {day: list(shifts) for day in days}
-        run_data = RunData.build(
+        run_data = Config.build(
             people=people,
             shifts_by_day=shifts_per_day,
             max_shifts_per_person=2,
@@ -73,22 +75,22 @@ def test_objective_function_for_weekdays(model, build_run_data, people, now, shi
     history = History.build(
         past_shifts=[
             # A has done 2 past shifts, most recent is 4 days ago
-            PastShift.build(
-                person=people[0], day=now - timedelta(days=4), shift=shifts[0]
+            AssignedShift.build(
+                person=people[0], day=now - timedelta(days=4), day_shift=shifts[0]
             ),  # Thu
-            PastShift.build(
-                person=people[0], day=now - timedelta(days=5), shift=shifts[0]
+            AssignedShift.build(
+                person=people[0], day=now - timedelta(days=5), day_shift=shifts[0]
             ),  # Wed
             # B has done 2 past shifts, most recent is 3 days ago
-            PastShift.build(
-                person=people[1], day=now - timedelta(days=3), shift=shifts[0]
+            AssignedShift.build(
+                person=people[1], day=now - timedelta(days=3), day_shift=shifts[0]
             ),  # Fri
-            PastShift.build(
-                person=people[1], day=now - timedelta(days=7), shift=shifts[0]
+            AssignedShift.build(
+                person=people[1], day=now - timedelta(days=7), day_shift=shifts[0]
             ),  # Mon
             # C has done 1 past shifts, most recent is 6 days ago
-            PastShift.build(
-                person=people[2], day=now - timedelta(days=6), shift=shifts[0]
+            AssignedShift.build(
+                person=people[2], day=now - timedelta(days=6), day_shift=shifts[0]
             ),  # Tue
             # D has done no past shifts
         ]
@@ -113,41 +115,41 @@ def test_objective_function_for_entire_week(model, build_run_data, people, now, 
         past_shifts=[
             # WEEKDAYS
             # A has done 2 past shifts, most recent is 4 days ago
-            PastShift.build(
-                person=people[0], day=now - timedelta(days=4), shift=shifts[0]
+            AssignedShift.build(
+                person=people[0], day=now - timedelta(days=4), day_shift=shifts[0]
             ),  # Thu
-            PastShift.build(
-                person=people[0], day=now - timedelta(days=5), shift=shifts[0]
+            AssignedShift.build(
+                person=people[0], day=now - timedelta(days=5), day_shift=shifts[0]
             ),  # Wed
             # B has done 2 past shifts, most recent is 3 days ago
-            PastShift.build(
-                person=people[1], day=now - timedelta(days=3), shift=shifts[0]
+            AssignedShift.build(
+                person=people[1], day=now - timedelta(days=3), day_shift=shifts[0]
             ),  # Fri
-            PastShift.build(
-                person=people[1], day=now - timedelta(days=7), shift=shifts[0]
+            AssignedShift.build(
+                person=people[1], day=now - timedelta(days=7), day_shift=shifts[0]
             ),  # Mon
             # C has done 1 past shifts, most recent is 6 days ago
-            PastShift.build(
-                person=people[2], day=now - timedelta(days=6), shift=shifts[0]
+            AssignedShift.build(
+                person=people[2], day=now - timedelta(days=6), day_shift=shifts[0]
             ),  # Tue
             # D has done no past shifts
             # SATURDAYS
             # A has done 1 past shifts, most recent is 2 days ago
-            PastShift.build(
-                person=people[0], day=now - timedelta(days=2), shift=shifts[0]
+            AssignedShift.build(
+                person=people[0], day=now - timedelta(days=2), day_shift=shifts[0]
             ),  # Sat
             # B has done no past shifts
             # C has done no past shifts
             # D has done 1 past Saturday shifts, most recent is 9 days ago
-            PastShift.build(
-                person=people[3], day=now - timedelta(days=9), shift=shifts[0]
+            AssignedShift.build(
+                person=people[3], day=now - timedelta(days=9), day_shift=shifts[0]
             ),  # Sat
             # SUNDAYS
             # A has done no past shifts
             # B has done no past shifts
             # C has done 1 past Sunday shifts, most recent is 1 days ago
-            PastShift.build(
-                person=people[2], day=now - timedelta(days=1), shift=shifts[0]
+            AssignedShift.build(
+                person=people[2], day=now - timedelta(days=1), day_shift=shifts[0]
             ),  # Sun
             # D has done no past shifts
         ]

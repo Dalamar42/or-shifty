@@ -1,7 +1,8 @@
 from datetime import date
-from typing import NamedTuple, List, Dict, Tuple, Generator
+from typing import Dict, Generator, List, NamedTuple, Tuple
 
-from . import Shift, Person, History
+from shifty.base_types import DayShift, Person
+from shifty.history import History
 from shifty.history_metrics import HistoryMetrics
 
 
@@ -22,7 +23,7 @@ class IndexedDay(NamedTuple):
 
 class IndexedDayShift(NamedTuple):
     index: int
-    val: Shift
+    val: DayShift
 
 
 Idx = Tuple[int, int, int, int]
@@ -43,7 +44,7 @@ class Index(NamedTuple):
         )
 
 
-class RunData(NamedTuple):
+class Config(NamedTuple):
     shifts_by_person: Dict[IndexedPerson, List[IndexedPersonShift]]
     shifts_by_day: Dict[IndexedDay, List[IndexedDayShift]]
     max_shifts_per_person: int
@@ -56,7 +57,7 @@ class RunData(NamedTuple):
         cls,
         people: List[Person],
         max_shifts_per_person: int,
-        shifts_by_day: Dict[date, List[Shift]],
+        shifts_by_day: Dict[date, List[DayShift]],
         history: History,
         now: date,
     ):

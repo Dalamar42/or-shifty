@@ -1,7 +1,9 @@
 from datetime import date
 
-from shifty.data import History, PastShift, PastShiftOffset, Person, Shift, ShiftType
+from shifty.base_types import DayShift, Person
+from shifty.history import History, PastShiftOffset
 from shifty.history_metrics import NEVER, HistoryMetrics
+from shifty.shift import AssignedShift, ShiftType
 
 
 def test_num_of_shifts():
@@ -11,12 +13,12 @@ def test_num_of_shifts():
 
     history = History.build(
         [
-            PastShift.build(person_a, date(2019, 8, 31), Shift("shift")),  # Sat
-            PastShift.build(person_b, date(2019, 9, 1), Shift("shift")),  # Sun
-            PastShift.build(person_a, date(2019, 9, 2), Shift("shift")),  # Mon
-            PastShift.build(person_b, date(2019, 9, 3), Shift("shift")),  # Tue
-            PastShift.build(person_a, date(2019, 9, 4), Shift("shift")),  # Wed
-            PastShift.build(person_c, date(2019, 9, 5), Shift("shift")),  # Thu
+            AssignedShift.build(person_a, date(2019, 8, 31), DayShift("shift")),  # Sat
+            AssignedShift.build(person_b, date(2019, 9, 1), DayShift("shift")),  # Sun
+            AssignedShift.build(person_a, date(2019, 9, 2), DayShift("shift")),  # Mon
+            AssignedShift.build(person_b, date(2019, 9, 3), DayShift("shift")),  # Tue
+            AssignedShift.build(person_a, date(2019, 9, 4), DayShift("shift")),  # Wed
+            AssignedShift.build(person_c, date(2019, 9, 5), DayShift("shift")),  # Thu
         ]
     )
 
@@ -36,12 +38,12 @@ def test_num_of_shifts_with_offsets():
 
     history = History.build(
         past_shifts=[
-            PastShift.build(person_a, date(2019, 8, 31), Shift("shift")),  # Sat
-            PastShift.build(person_b, date(2019, 9, 1), Shift("shift")),  # Sun
-            PastShift.build(person_a, date(2019, 9, 2), Shift("shift")),  # Mon
-            PastShift.build(person_b, date(2019, 9, 3), Shift("shift")),  # Tue
-            PastShift.build(person_a, date(2019, 9, 4), Shift("shift")),  # Wed
-            PastShift.build(person_c, date(2019, 9, 5), Shift("shift")),  # Thu
+            AssignedShift.build(person_a, date(2019, 8, 31), DayShift("shift")),  # Sat
+            AssignedShift.build(person_b, date(2019, 9, 1), DayShift("shift")),  # Sun
+            AssignedShift.build(person_a, date(2019, 9, 2), DayShift("shift")),  # Mon
+            AssignedShift.build(person_b, date(2019, 9, 3), DayShift("shift")),  # Tue
+            AssignedShift.build(person_a, date(2019, 9, 4), DayShift("shift")),  # Wed
+            AssignedShift.build(person_c, date(2019, 9, 5), DayShift("shift")),  # Thu
         ],
         offsets=[
             PastShiftOffset.build(
@@ -73,12 +75,12 @@ def test_date_last_on_shift():
 
     history = History.build(
         [
-            PastShift.build(person_a, date(2019, 8, 31), Shift("shift")),  # Sat
-            PastShift.build(person_b, date(2019, 9, 1), Shift("shift")),  # Sun
-            PastShift.build(person_a, date(2019, 9, 2), Shift("shift")),  # Mon
-            PastShift.build(person_b, date(2019, 9, 3), Shift("shift")),  # Tue
-            PastShift.build(person_a, date(2019, 9, 4), Shift("shift")),  # Wed
-            PastShift.build(person_c, date(2019, 9, 5), Shift("shift")),  # Thu
+            AssignedShift.build(person_a, date(2019, 8, 31), DayShift("shift")),  # Sat
+            AssignedShift.build(person_b, date(2019, 9, 1), DayShift("shift")),  # Sun
+            AssignedShift.build(person_a, date(2019, 9, 2), DayShift("shift")),  # Mon
+            AssignedShift.build(person_b, date(2019, 9, 3), DayShift("shift")),  # Tue
+            AssignedShift.build(person_a, date(2019, 9, 4), DayShift("shift")),  # Wed
+            AssignedShift.build(person_c, date(2019, 9, 5), DayShift("shift")),  # Thu
         ]
     )
 
@@ -100,11 +102,11 @@ def test_free_days_of_type_since_last_on_shift():
 
     history = History.build(
         [
-            PastShift.build(person_a, date(2019, 8, 31), Shift("shift")),  # Sat
-            PastShift.build(person_b, date(2019, 9, 1), Shift("shift")),  # Sun
-            PastShift.build(person_a, date(2019, 9, 2), Shift("shift")),  # Mon
-            PastShift.build(person_b, date(2019, 9, 7), Shift("shift")),  # Sat
-            PastShift.build(person_c, date(2019, 9, 8), Shift("shift")),  # Sun
+            AssignedShift.build(person_a, date(2019, 8, 31), DayShift("shift")),  # Sat
+            AssignedShift.build(person_b, date(2019, 9, 1), DayShift("shift")),  # Sun
+            AssignedShift.build(person_a, date(2019, 9, 2), DayShift("shift")),  # Mon
+            AssignedShift.build(person_b, date(2019, 9, 7), DayShift("shift")),  # Sat
+            AssignedShift.build(person_c, date(2019, 9, 8), DayShift("shift")),  # Sun
         ]
     )
     metrics = HistoryMetrics.build(history, [person_a, person_b], date(2019, 9, 16))

@@ -4,12 +4,12 @@ from typing import Dict
 from ortools.constraint_solver.pywrapcp import IntVar
 from ortools.sat.python.cp_model import LinearExpr
 
-from .data import RunData, ShiftType
-from .data.run import Idx
+from shifty.config import Config, Idx
+from shifty.shift import ShiftType
 
 
 class Objective(metaclass=ABCMeta):
-    def objective(self, assignments: Dict[Idx, IntVar], data: RunData) -> LinearExpr:
+    def objective(self, assignments: Dict[Idx, IntVar], data: Config) -> LinearExpr:
         pass
 
 
@@ -18,7 +18,7 @@ class RankingWeight(Objective):
     ADDITIONAL_SHIFTS_WEIGHT = 100
     RANKING_WEIGHT = 1
 
-    def objective(self, assignments: Dict[Idx, IntVar], data: RunData) -> LinearExpr:
+    def objective(self, assignments: Dict[Idx, IntVar], data: Config) -> LinearExpr:
         # Compute the ranking weight for each shift_type. The coefficient is to discourage optimising one
         # shift type at the expense of another
         return LinearExpr.Sum(
@@ -28,7 +28,7 @@ class RankingWeight(Objective):
         )
 
     def _ranking_weight_for_shift_type(
-        self, assignments: Dict[Idx, IntVar], data: RunData, shift_type: ShiftType
+        self, assignments: Dict[Idx, IntVar], data: Config, shift_type: ShiftType
     ) -> LinearExpr:
         people_ranking = self._rank_people(data, shift_type)
 

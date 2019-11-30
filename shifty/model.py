@@ -4,9 +4,12 @@ from typing import Dict, List
 
 from ortools.sat.python import cp_model
 
-from .constraints import FIXED_CONSTRAINTS, Constraint
-from .data import History, Person, RunData, Shift
-from .objective import Objective, RankingWeight
+from shifty.base_types import DayShift, Person
+from shifty.config import Config
+from shifty.constraints import FIXED_CONSTRAINTS, Constraint
+from shifty.history import History
+from shifty.objective import Objective, RankingWeight
+from shifty.shift import AssignedShift
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +17,7 @@ log = logging.getLogger(__name__)
 def assign(
     people: List[Person],
     max_shifts_per_person: int,
-    shifts_by_day: Dict[date, List[Shift]],
+    shifts_by_day: Dict[date, List[DayShift]],
     history: History = History.build(),
     now: date = None,
     objective: Objective = RankingWeight(),
@@ -23,7 +26,7 @@ def assign(
     constraints = list(constraints) + FIXED_CONSTRAINTS
     constraints = sorted(constraints, key=lambda c: c.priority)
     now = now or date.today()
-    data = RunData.build(people, max_shifts_per_person, shifts_by_day, history, now)
+    data = Config.build(people, max_shifts_per_person, shifts_by_day, history, now)
     return _run(data, objective, constraints)
 
 
@@ -61,4 +64,8 @@ def _solution(solver, data, assignments):
         for day_shift in day_shifts:
             for index in data.iter(day_filter=day, day_shift_filter=day_shift):
                 if solver.Value(assignments[index.get()]) == 1:
-                    yield index.person.val, index.person_shift.val, index.day.val, index.day_shift.val
+                    yield AssignedShift(
+                        person=index.person.val,
+                        day=index.day.val,
+                        day_shift=index.day_shift.val,
+                    )

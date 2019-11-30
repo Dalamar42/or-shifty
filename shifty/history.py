@@ -1,21 +1,7 @@
-from datetime import date
 from typing import List, NamedTuple, Tuple
 
-from . import Person, Shift, ShiftType
-
-
-class PastShift(NamedTuple):
-    person: Person
-    day: date
-    shift: Shift
-
-    @classmethod
-    def build(cls, person, day, shift):
-        return cls(person=person, day=day, shift=shift)
-
-    @property
-    def shift_type(self):
-        return ShiftType.from_day(self.day)
+from shifty.base_types import Person
+from shifty.shift import AssignedShift, ShiftType
 
 
 class PastShiftOffset(NamedTuple):
@@ -29,12 +15,12 @@ class PastShiftOffset(NamedTuple):
 
 
 class History(NamedTuple):
-    past_shifts: Tuple[PastShift, ...]
+    past_shifts: Tuple[AssignedShift, ...]
     offsets: Tuple[PastShiftOffset, ...]
 
     @classmethod
     def build(
-        cls, past_shifts: List[PastShift] = (), offsets: List[PastShiftOffset] = ()
+        cls, past_shifts: List[AssignedShift] = (), offsets: List[PastShiftOffset] = ()
     ):
         past_shifts = sorted(past_shifts, key=lambda ps: ps.day, reverse=True)
         return cls(past_shifts=tuple(past_shifts), offsets=tuple(offsets))
