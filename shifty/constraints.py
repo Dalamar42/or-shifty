@@ -1,11 +1,11 @@
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from itertools import product
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Dict, Generator, List, Optional
 
 from ortools.sat.python.cp_model import IntVar, LinearExpr
 
-from shifty.config import Config
+from shifty.config import Config, Idx
 from shifty.shift import ShiftType
 
 
@@ -24,7 +24,7 @@ class Constraint(metaclass=ABCMeta):
 
     @abstractmethod
     def generate(
-        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: Config
+        self, assignments: Dict[Idx, IntVar], data: Config
     ) -> Generator[LinearExpr, None, None]:
         yield from ()
 
@@ -40,7 +40,7 @@ class Constraint(metaclass=ABCMeta):
 
 class EachDayShiftIsAssignedToExactlyOnePersonShift(Constraint):
     def generate(
-        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: Config
+        self, assignments: Dict[Idx, IntVar], data: Config
     ) -> Generator[LinearExpr, None, None]:
         for day, day_shifts in data.shifts_by_day.items():
             for day_shift in day_shifts:
@@ -57,7 +57,7 @@ class EachDayShiftIsAssignedToExactlyOnePersonShift(Constraint):
 
 class EachPersonShiftIsAssignedToAtMostOneDayShift(Constraint):
     def generate(
-        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: Config
+        self, assignments: Dict[Idx, IntVar], data: Config
     ) -> Generator[LinearExpr, None, None]:
         for person, person_shifts in data.shifts_by_person.items():
             for person_shift in person_shifts:
@@ -74,7 +74,7 @@ class EachPersonShiftIsAssignedToAtMostOneDayShift(Constraint):
 
 class EachPersonsShiftsAreFilledInOrder(Constraint):
     def generate(
-        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: Config
+        self, assignments: Dict[Idx, IntVar], data: Config
     ) -> Generator[LinearExpr, None, None]:
         for person, person_shifts in data.shifts_by_person.items():
             for person_shift_idx, person_shift in enumerate(person_shifts):
@@ -103,7 +103,7 @@ class EachPersonWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
         self._x = x
 
     def generate(
-        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: Config
+        self, assignments: Dict[Idx, IntVar], data: Config
     ) -> Generator[LinearExpr, None, None]:
         for person in data.shifts_by_person.keys():
             yield (
@@ -127,7 +127,7 @@ class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
         self._x = x
 
     def generate(
-        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: Config
+        self, assignments: Dict[Idx, IntVar], data: Config
     ) -> Generator[LinearExpr, None, None]:
         for person, day in product(
             data.shifts_by_person.keys(), data.shifts_by_day.keys()
@@ -156,7 +156,7 @@ class ThereShouldBeAtLeastXWeekendsBetweenWeekendOps(Constraint):
         self._x = x
 
     def generate(
-        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: Config
+        self, assignments: Dict[Idx, IntVar], data: Config
     ) -> Generator[LinearExpr, None, None]:
         for person, day in product(
             data.shifts_by_person.keys(), data.shifts_by_day.keys()
@@ -198,7 +198,7 @@ class RespectPersonRestrictionsPerShiftType(Constraint):
         }
 
     def generate(
-        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: Config
+        self, assignments: Dict[Idx, IntVar], data: Config
     ) -> Generator[LinearExpr, None, None]:
         for person, day in product(
             data.shifts_by_person.keys(), data.shifts_by_day.keys()
@@ -236,7 +236,7 @@ class RespectPersonRestrictionsPerDay(Constraint):
         }
 
     def generate(
-        self, assignments: Dict[Tuple[int, int, int, int], IntVar], data: Config
+        self, assignments: Dict[Idx, IntVar], data: Config
     ) -> Generator[LinearExpr, None, None]:
         for person, day in product(
             data.shifts_by_person.keys(), data.shifts_by_day.keys()
