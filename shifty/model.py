@@ -37,14 +37,22 @@ def assign(
     data = Config.build(people, max_shifts_per_person, shifts_by_day, history, now)
     log.info(str(data.history_metrics))
 
+    solver, assignments = _run_with_retries(data, objective, list(constraints))
+
+    _validate_constraints_against_solution(solver, constraints, data, assignments)
+
+    return list(_solution(solver, data, assignments))
+
+
+def _run_with_retries(data, objective, constraints):
     log.info("Running model...")
     while True:
         try:
-            solution = _run(data, objective, constraints)
+            result = _run(data, objective, constraints)
             log.info("Solution found")
-            return solution
+            return result
         except Infeasible:
-            log.info("Failed to find solution with current constraints")
+            log.warning("Failed to find solution with current constraints")
             constraints = _drop_least_important_constraints(constraints)
             if constraints is None:
                 raise
@@ -77,7 +85,7 @@ def _run(data, objective, constraints):
 
     for constraint in constraints:
         log.debug("Adding constraint %s", constraint)
-        for expression in constraint.generate(assignments, data):
+        for expression, _ in constraint.generate(assignments, data):
             model.Add(expression)
 
     model.Maximize(objective.objective(assignments, data))
@@ -87,7 +95,7 @@ def _run(data, objective, constraints):
     if status is INFEASIBLE:
         raise Infeasible()
 
-    return list(_solution(solver, data, assignments))
+    return solver, assignments
 
 
 def init_assignments(model, data):
@@ -109,3 +117,23 @@ def _solution(solver, data, assignments):
                         day=index.day.val,
                         day_shift=index.day_shift.val,
                     )
+
+
+def _validate_constraints_against_solution(solver, constraints, data, assignments):
+    for constraint in constraints:
+        log.debug("Evaluating constraint %s against solution", constraint)
+        for expression, impact in constraint.generate(assignments, data):
+            expr = expression.Expression()
+            bounds = expression.Bounds()
+            value = solver.Value(expr)
+            expr_valid = bounds[0] <= value <= bounds[1]
+            if not expr_valid:
+                log.debug(
+                    "Solution violates constraint %s, expr %s, value %s, bounds %s, impact %s",
+                    constraint,
+                    expr,
+                    value,
+                    bounds,
+                    impact,
+                )
+                log.warning("Solution violates constraint %s %s", constraint, impact)

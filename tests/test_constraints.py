@@ -91,7 +91,7 @@ def build_run_data(people, days, shifts, now):
 @fixture
 def build_expressions(model, now):
     def build(constraint, data, assignments):
-        expressions = list(constraint.generate(assignments, data))
+        expressions = [e[0] for e in constraint.generate(assignments, data)]
         for expr in expressions:
             model.Add(expr)
 
