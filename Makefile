@@ -20,6 +20,14 @@ format:         ## Run linter and formatter
 	flake8 or_shifty
 	flake8 tests
 
+.PHONY: verify
+verify:         ## Run linter and formatter in check mode only
+	isort --check-only **/*.py
+	black --check or_shifty
+	black --check tests
+	flake8 or_shifty
+	flake8 tests
+
 .PHONY: test
 test:           ## Run tests
 	pytest -vv tests

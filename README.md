@@ -203,11 +203,12 @@ make help     # Get a list of all supported make targets
 make freeze   # Update and freeze python requirements
 make test     # Run tests
 make format   # Run formatters and linters
+make verify   # Run formatters and linters in check only mode
 make install  # Install project dependencies from poetry.lock, project module, and `shifty` script
 make build    # Build source and wheels
 ```
 
-Before submitting any pull requests `make test` and `make format` must both be run an be passing.
+Before submitting any pull requests `make test` and `make verify` must both be run an be passing.
 
 ## License
 See the LICENSE file that is included with this repository.
