@@ -15,6 +15,13 @@ drop the least important constraint and try again, repeatedly, until a solution 
 be dropped. If any constraints had to be dropped the tool will also print to the terminal which of the original
 constraints were violated, for which person, and on which day.
 
+## Installation
+You will need Python 3.7 or greater.
+
+```bash
+pip install or-shifty
+```
+
 ## Use
 Help:
 
