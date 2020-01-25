@@ -29,10 +29,36 @@ Help:
 shifty --help
 ```
 
-Basic use:
+### Solver mode
+For using shifty in its default solver mode.
+
+An output file path can optionally be provided in which case shifty will write the solution to the file in JSON
+format. If a file already exists at that path then it will overwritten.
 
 ```bash
-shifty --config <path_to_config.json> --history <path_to_history.json> [--output <path_to_optional_output.json>]
+shifty \
+    --config <path_to_config.json> \
+    --history <path_to_history.json> \
+    [--output <path_to_optional_output.json>]
+```
+
+### Evaluation mode
+Shifty can also be run in evaluation mode.
+
+In this mode an output with an existing solution must be provided. Shifty will then evaluate this solution against
+the constraints, objective function, and history provided and it will print which (if any) constraints are violated
+by the solution and the score of the objective function. This is intended as a diagnostic tool to inspect shifty's
+decisions.
+
+When in this mode the output file must contain exactly an assigned shift for every shift specified in config otherwise
+shifty will exit with an error.
+
+```bash
+shifty \
+    --config <path_to_config.json> \
+    --history <path_to_history.json> \
+    --output <path_to_optional_output.json> \
+    --evaluate
 ```
 
 ### Shift types
