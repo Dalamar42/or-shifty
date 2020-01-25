@@ -28,6 +28,7 @@ def solve(
     solver, assignments = _run_with_retries(config, objective, list(constraints))
 
     _validate_constraints_against_solution(solver, constraints, config, assignments)
+    _display_objective_function_score(solver)
 
     solution = sorted(
         list(_solution(solver, config, assignments)), key=lambda s: (s.day, s.name)
@@ -126,3 +127,7 @@ def _validate_constraints_against_solution(solver, constraints, data, assignment
                     impact,
                 )
                 log.warning("Solution violates constraint %s %s", constraint, impact)
+
+
+def _display_objective_function_score(solver):
+    log.info("Objective function score was %s", solver.ObjectiveValue())
