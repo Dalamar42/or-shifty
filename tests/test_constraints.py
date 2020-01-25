@@ -78,19 +78,13 @@ def shifts_per_day(days):
 
 
 @fixture
-def now():
-    return date(2019, 1, 1)
-
-
-@fixture
-def build_run_data(people, shifts_per_day, now):
+def build_run_data(people, shifts_per_day):
     def build(history=History.build()):
         run_data = Config.build(
             people=people,
             max_shifts_per_person=2,
             shifts_by_day=shifts_per_day,
             history=history,
-            now=now,
         )
         return run_data
 
@@ -98,7 +92,7 @@ def build_run_data(people, shifts_per_day, now):
 
 
 @fixture
-def build_expressions(model, now):
+def build_expressions(model):
     def build(constraint, data, assignments):
         expressions = [e[0] for e in constraint.generate(assignments, data)]
         for expr in expressions:

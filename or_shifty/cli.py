@@ -22,7 +22,6 @@ class Inputs:
     objective: Objective
     constraints: List[Constraint]
     history: History
-    now: date
     verbose: bool
     output: str
 
@@ -86,7 +85,6 @@ def _parse_inputs(
         objective=_parse_objective(config),
         constraints=_parse_constraints(config),
         history=_parse_history(history),
-        now=date.today(),
         verbose=verbose,
         output=output,
     )

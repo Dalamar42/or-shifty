@@ -26,8 +26,8 @@ class Config:
         max_shifts_per_person: int,
         shifts_by_day: Dict[date, List[Shift]],
         history: History,
-        now: date,
     ):
+        now = min(shifts_by_day.keys())
         return cls(
             indexer=Indexer.build(people, max_shifts_per_person, shifts_by_day),
             shifts_by_person={
