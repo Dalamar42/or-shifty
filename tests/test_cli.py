@@ -1,6 +1,8 @@
 from datetime import date
 
-from or_shifty.cli import parse_args
+import pytest
+
+from or_shifty.cli import InvalidInputs, parse_args
 from or_shifty.constraints import (
     EachPersonWorksAtMostXShiftsPerAssignmentPeriod,
     RespectPersonRestrictionsPerDay,
@@ -10,13 +12,16 @@ from or_shifty.constraints import (
 from or_shifty.person import Person
 from or_shifty.shift import AssignedShift, Shift, ShiftType
 
-CONFIG_FILE_PATH = "tests/test_files/cli/config.json"
-HISTORY_FILE_PATH = "tests/test_files/cli/history.json"
-OUTPUT_FILE_PATH = "tests/test_files/cli/output.json"
-
 
 def test_parsing_inputs():
-    inputs = parse_args(["--config", CONFIG_FILE_PATH, "--history", HISTORY_FILE_PATH])
+    inputs = parse_args(
+        [
+            "--config",
+            "tests/test_files/cli/config.json",
+            "--history",
+            "tests/test_files/cli/history.json",
+        ]
+    )
 
     assert set(inputs.people) == {
         Person(name="Admiral Ackbar"),
@@ -89,27 +94,48 @@ def test_parsing_output():
     inputs = parse_args(
         [
             "--config",
-            CONFIG_FILE_PATH,
+            "tests/test_files/cli/config.json",
             "--history",
-            HISTORY_FILE_PATH,
+            "tests/test_files/cli/history.json",
             "--output",
-            OUTPUT_FILE_PATH,
+            "tests/test_files/cli/output.json",
             "--evaluate",
         ]
     )
 
-    assert inputs.output_path == OUTPUT_FILE_PATH
+    assert inputs.output_path == "tests/test_files/cli/output.json"
     assert inputs.output == [
         AssignedShift(
             person=Person("Admiral Ackbar"),
-            day=date(2019, 11, 28),
+            day=date(2019, 11, 29),
             name="ops",
-            shift_type=ShiftType.SPECIAL_A,
+            shift_type=ShiftType.STANDARD,
         ),
         AssignedShift(
             person=Person("Admiral Ackbar"),
-            day=date(2019, 11, 27),
+            day=date(2019, 11, 30),
             name="ops",
-            shift_type=ShiftType.SPECIAL_B,
+            shift_type=ShiftType.STANDARD,
+        ),
+        AssignedShift(
+            person=Person("Admiral Ackbar"),
+            day=date(2019, 12, 1),
+            name="ops",
+            shift_type=ShiftType.SPECIAL_A,
         ),
     ]
+
+
+def test_parsing_invalid_output():
+    with pytest.raises(InvalidInputs):
+        parse_args(
+            [
+                "--config",
+                "tests/test_files/invalid_evaluation_cli/config.json",
+                "--history",
+                "tests/test_files/invalid_evaluation_cli/history.json",
+                "--output",
+                "tests/test_files/invalid_evaluation_cli/output.json",
+                "--evaluate",
+            ]
+        )

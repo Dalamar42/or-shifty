@@ -2,6 +2,6 @@
   "shifts": [
     {"person": "Admiral Ackbar", "day": "2019-11-29", "name": "ops", "type": "standard"},
     {"person": "Admiral Ackbar", "day": "2019-11-30", "name": "ops", "type": "standard"},
-    {"person": "Admiral Ackbar", "day": "2019-12-01", "name": "ops", "type": "special_a"}
+    {"person": "Admiral Ackbar", "day": "2019-12-02", "name": "ops", "type": "special_a"}
   ]
 }
