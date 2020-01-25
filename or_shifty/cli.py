@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Dict, List, Optional
 
+import pkg_resources
+
 from or_shifty.constraints import CONSTRAINTS, Constraint
 from or_shifty.history import History, PastShiftOffset
 from or_shifty.objective import OBJECTIVE_FUNCTIONS, Objective
@@ -36,6 +38,10 @@ class Inputs:
 def parse_args(args=None) -> Inputs:
     parser = argparse.ArgumentParser(
         description="Automatic ops shift allocator using constraint solver"
+    )
+    version = pkg_resources.get_distribution("or-shifty").version
+    parser.add_argument(
+        "--version", action="version", version=version,
     )
     parser.add_argument(
         "--config",
