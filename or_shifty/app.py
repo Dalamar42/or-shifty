@@ -19,7 +19,6 @@ def ops():
         max_shifts_per_person=inputs.max_shifts_per_person,
         shifts_by_day=inputs.shifts_by_day,
         history=inputs.history,
-        now=inputs.now,
     )
     solution = solve(
         config=config, objective=inputs.objective, constraints=inputs.constraints,

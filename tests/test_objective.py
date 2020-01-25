@@ -46,6 +46,11 @@ def days():
 
 
 @fixture
+def now():
+    return date(2019, 11, 26)
+
+
+@fixture
 def shifts_per_day(days):
     return {
         day: [
@@ -58,19 +63,13 @@ def shifts_per_day(days):
 
 
 @fixture
-def now():
-    return date(2019, 11, 25)
-
-
-@fixture
-def build_run_data(people, shifts_per_day, now):
+def build_run_data(people, shifts_per_day):
     def build(history=History.build()):
         run_data = Config.build(
             people=people,
             shifts_by_day=shifts_per_day,
             max_shifts_per_person=2,
             history=history,
-            now=now,
         )
         return run_data
 

@@ -22,7 +22,6 @@ def test_basic_assignment():
         max_shifts_per_person=1,
         shifts_by_day={shift.day: [shift] for shift in shifts},
         history=History.build(),
-        now=date.today(),
     )
     solution = solve(config)
     assert len(list(solution)) == 7
