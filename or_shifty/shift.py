@@ -59,6 +59,9 @@ class AssignedShift(Shift):
             "person": self.person.name,
         }
 
+    def unassigned(self) -> Shift:
+        return Shift(name=self.name, shift_type=self.shift_type, day=self.day)
+
 
 class ShiftType(Enum):
     STANDARD = auto()

@@ -1,8 +1,9 @@
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
 from itertools import product
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Dict, Generator, List, Optional, Set, Tuple
 
 from ortools.sat.python.cp_model import IntVar, LinearExpr
 
@@ -10,7 +11,7 @@ from or_shifty.config import Config
 from or_shifty.history_metrics import NEVER
 from or_shifty.indexer import Idx
 from or_shifty.person import Person
-from or_shifty.shift import ShiftType
+from or_shifty.shift import AssignedShift, Shift, ShiftType
 
 
 @dataclass(frozen=True)
@@ -296,6 +297,48 @@ class RespectPersonRestrictionsPerDay(Constraint):
         return self._restrictions == other._restrictions
 
 
+class PredeterminedAssignmentsConstraint(Constraint):
+    """This constraint forces the solver to a given solution
+
+    It is meant to be used with the evaluation mode so the solver can be forced to produce a given
+    solution against which the constraints and objective function can then be evaluated.
+    """
+
+    def __init__(self, assigned_shifts: List[AssignedShift], **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._assigned_shifts = assigned_shifts
+
+    def generate(
+        self, assignments: Dict[Idx, IntVar], data: Config
+    ) -> Generator[Tuple[LinearExpr, ConstraintImpact], None, None]:
+        selected_shifts = self._selected_shifts()
+
+        for index in data.indexer.iter():
+            key = (index.person, index.person_shift, index.day_shift)
+            assignment = 1 if (key in selected_shifts) else 0
+            yield (
+                assignments[index.idx] == assignment,
+                ConstraintImpact(None, None),
+            )
+
+    def _selected_shifts(self) -> Set[Tuple[Person, int, Shift]]:
+        selected_shifts = set()
+        next_person_shift = defaultdict(lambda: 0)
+
+        for shift in self._assigned_shifts:
+            selected_shifts.add(
+                (shift.person, next_person_shift[shift.person], shift.unassigned())
+            )
+            next_person_shift[shift.person] += 1
+
+        return selected_shifts
+
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        return self._assigned_shifts == other._assigned_shifts
+
+
 FIXED_CONSTRAINTS = [
     EachDayShiftIsAssignedToExactlyOnePersonShift(priority=0),
     EachPersonShiftIsAssignedToAtMostOneDayShift(priority=0),
@@ -313,3 +356,5 @@ CONSTRAINTS = {
         RespectPersonRestrictionsPerDay,
     ]
 }
+
+EVALUATION_CONSTRAINT = PredeterminedAssignmentsConstraint
