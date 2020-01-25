@@ -1,16 +1,12 @@
 import logging
-from datetime import date
-from typing import Dict, List
+from typing import List
 
 from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import INFEASIBLE
 
 from or_shifty.config import Config
 from or_shifty.constraints import FIXED_CONSTRAINTS, Constraint
-from or_shifty.history import History
 from or_shifty.objective import Objective, RankingWeight
-from or_shifty.person import Person
-from or_shifty.shift import Shift
 
 log = logging.getLogger(__name__)
 
@@ -19,30 +15,22 @@ class Infeasible(Exception):
     pass
 
 
-def assign(
-    people: List[Person],
-    max_shifts_per_person: int,
-    shifts_by_day: Dict[date, List[Shift]],
-    history: History = History.build(),
-    now: date = None,
+def solve(
+    config: Config,
     objective: Objective = RankingWeight(),
     constraints: List[Constraint] = tuple(),
 ):
     constraints = list(constraints) + FIXED_CONSTRAINTS
     constraints = sorted(constraints, key=lambda c: c.priority)
 
-    now = now or date.today()
-    log.debug("Setting now to %s", now)
+    log.info(str(config.history_metrics))
 
-    data = Config.build(people, max_shifts_per_person, shifts_by_day, history, now)
-    log.info(str(data.history_metrics))
+    solver, assignments = _run_with_retries(config, objective, list(constraints))
 
-    solver, assignments = _run_with_retries(data, objective, list(constraints))
-
-    _validate_constraints_against_solution(solver, constraints, data, assignments)
+    _validate_constraints_against_solution(solver, constraints, config, assignments)
 
     solution = sorted(
-        list(_solution(solver, data, assignments)), key=lambda s: (s.day, s.name)
+        list(_solution(solver, config, assignments)), key=lambda s: (s.day, s.name)
     )
     log.info("Solution\n%s", "\n".join(f">>>> {shift}" for shift in solution))
 
