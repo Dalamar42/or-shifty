@@ -23,8 +23,8 @@ def ops():
     solution = solve(
         config=config, objective=inputs.objective, constraints=inputs.constraints,
     )
-    if inputs.output is not None:
-        write_output(inputs.output, solution)
+    if inputs.output_path is not None and not inputs.evaluate:
+        write_output(inputs.output_path, solution)
 
 
 def configure_logging(verbose=False):
