@@ -1,0 +1,15 @@
+{
+  "shifts": [
+    {"person": "Admiral Ackbar", "day": "2019-11-28", "name": "ops", "type": "special_a"},
+    {"person": "Admiral Ackbar", "day": "2019-11-27", "name": "ops", "type": "special_b"},
+    {"person": "Admiral Ackbar", "day": "2019-11-26", "name": "ops", "type": "standard"},
+    {"person": "Mon Mothma", "day": "2019-11-25", "name": "ops", "type": "standard"},
+    {"person": "Mon Mothma", "day": "2019-11-24", "name": "ops", "type": "standard"},
+    {"person": "Admiral Ackbar", "day": "2019-11-23", "name": "ops", "type": "standard"}
+  ],
+  "offsets": [
+    {"person": "Admiral Ackbar", "shift_type": "standard", "offset": 2},
+    {"person": "Admiral Ackbar", "shift_type": "special_b", "offset": 1},
+    {"person": "Mon Mothma", "shift_type": "special_a", "offset": 3}
+  ]
+}

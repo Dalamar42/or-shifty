@@ -53,11 +53,7 @@ def evaluate(
 
     log.info(str(config.history_metrics))
 
-    try:
-        solver, assignments = _run(config, objective, [evaluation_constraint])
-    except Infeasible:
-        log.error("The provided output is infeasible for the solver")
-        return exit(1)
+    solver, assignments = _run(config, objective, [evaluation_constraint])
 
     _validate_constraints_against_solution(solver, constraints, config, assignments)
     _display_objective_function_score(solver)

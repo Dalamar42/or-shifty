@@ -14,6 +14,11 @@ from or_shifty.shift import AssignedShift, Shift, ShiftType
 log = logging.getLogger(__name__)
 
 
+class InvalidInputs(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+
 @dataclass(frozen=True)
 class Inputs:
     people: List[Person]
@@ -89,7 +94,7 @@ def _parse_inputs(
     output_path: Optional[str],
     evaluate: bool,
 ) -> Inputs:
-    _validate_args(config_path, history_path, output_path, evaluate)
+    _validate_args(output_path, evaluate)
 
     with open(config_path, "r") as f:
         config = json.load(f)
@@ -97,12 +102,18 @@ def _parse_inputs(
     with open(history_path, "r") as f:
         history = json.load(f)
 
-    output = read_output(output_path) if evaluate else None
+    shifts_by_day = _parse_shifts_by_day(config)
+
+    if evaluate:
+        output = read_output(output_path)
+        _validate_evaluation_output(shifts_by_day, output)
+    else:
+        output = None
 
     return Inputs(
         people=_parse_people(config),
         max_shifts_per_person=_parse_max_shifts_per_person(config),
-        shifts_by_day=_parse_shifts_by_day(config),
+        shifts_by_day=shifts_by_day,
         objective=_parse_objective(config),
         constraints=_parse_constraints(config),
         history=_parse_history(history),
@@ -113,20 +124,23 @@ def _parse_inputs(
     )
 
 
-def _validate_args(
-    config_path: str, history_path: str, output: Optional[str], evaluate: bool,
-):
-    if config_path is None:
-        _fail("Config path must be provided")
-    if history_path is None:
-        _fail("History path must be provided")
+def _validate_args(output: Optional[str], evaluate: bool,) -> None:
     if evaluate and output is None:
-        _fail("When in evaluate mode output path must be provided")
+        raise InvalidInputs("When in evaluate mode output path must be provided")
 
 
-def _fail(msg):
-    log.error(msg)
-    exit(1)
+def _validate_evaluation_output(
+    shifts_by_day: Dict[date, List[Shift]], output: List[AssignedShift]
+) -> None:
+    expected_shifts = {shift for shifts in shifts_by_day.values() for shift in shifts}
+    output_shifts = {shift.unassigned() for shift in output}
+    missing_from_output = output_shifts - expected_shifts
+    extra_in_output = expected_shifts - output_shifts
+    if missing_from_output or extra_in_output:
+        raise InvalidInputs(
+            f"There is a discrepancy between the shifts in the output and those from config. "
+            f"Extra in output: {extra_in_output}, Missing from output: {missing_from_output}"
+        )
 
 
 def _parse_people(config) -> List[Person]:
@@ -161,7 +175,7 @@ def _parse_constraints(config) -> List[Constraint]:
         CONSTRAINTS[constraint["type"]](
             priority=constraint["priority"],
             name=constraint.get("name"),
-            **constraint.get("params", {})
+            **constraint.get("params", {}),
         )
         for constraint in config["constraints"]
     ]
