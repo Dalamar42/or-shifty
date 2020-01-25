@@ -1,3 +1,4 @@
+import itertools
 from collections import defaultdict
 from datetime import date
 from unittest.mock import Mock
@@ -11,6 +12,7 @@ from or_shifty.constraints import (
     EachPersonShiftIsAssignedToAtMostOneDayShift,
     EachPersonsShiftsAreFilledInOrder,
     EachPersonWorksAtMostXShiftsPerAssignmentPeriod,
+    PredeterminedAssignmentsConstraint,
     RespectPersonRestrictionsPerDay,
     RespectPersonRestrictionsPerShiftType,
     ThereShouldBeAtLeastXDaysBetweenOps,
@@ -301,3 +303,42 @@ def test_respect_person_permissions_per_day(model, build_run_data, build_express
     assert not evaluate(assignments, ((0, 0, 1, 0),), expressions)
     for day in range(2, 5):
         assert evaluate(assignments, ((0, 0, day, 0),), expressions)
+
+
+def test_predetermined_assignments(
+    model, build_run_data, build_expressions, people, days, shifts_per_day
+):
+    data = build_run_data()
+
+    assigned_shifts = [
+        shifts_per_day[days[0]][0].assign(people[0]),
+        shifts_per_day[days[1]][0].assign(people[1]),
+        shifts_per_day[days[4]][0].assign(people[0]),
+        shifts_per_day[days[5]][0].assign(people[1]),
+    ]
+
+    constraint = PredeterminedAssignmentsConstraint(
+        priority=0, assigned_shifts=assigned_shifts
+    )
+
+    assignments = init_assignments(model, data)
+    expressions = build_expressions(constraint, data, assignments)
+
+    only_valid_solution = (
+        (0, 0, 0, 0),
+        (1, 0, 1, 0),
+        (0, 1, 4, 0),
+        (1, 1, 5, 0),
+    )
+    assert evaluate(assignments, only_valid_solution, expressions)
+
+    all_valid_indices = [index.idx for index in data.indexer.iter()]
+    possible_solutions = (
+        list(itertools.combinations(all_valid_indices, 1))
+        + list(itertools.combinations(all_valid_indices, 2))
+        + list(itertools.combinations(all_valid_indices, 3))
+        + list(itertools.combinations(all_valid_indices, 4))
+    )
+    for solution in possible_solutions:
+        if set(solution) != set(only_valid_solution):
+            assert not evaluate(assignments, solution, expressions)
