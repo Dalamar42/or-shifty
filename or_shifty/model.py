@@ -5,8 +5,13 @@ from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import INFEASIBLE
 
 from or_shifty.config import Config
-from or_shifty.constraints import FIXED_CONSTRAINTS, Constraint
+from or_shifty.constraints import (
+    EVALUATION_CONSTRAINT,
+    FIXED_CONSTRAINTS,
+    Constraint,
+)
 from or_shifty.objective import Objective, RankingWeight
+from or_shifty.shift import AssignedShift
 
 log = logging.getLogger(__name__)
 
@@ -19,9 +24,8 @@ def solve(
     config: Config,
     objective: Objective = RankingWeight(),
     constraints: List[Constraint] = tuple(),
-):
-    constraints = list(constraints) + FIXED_CONSTRAINTS
-    constraints = sorted(constraints, key=lambda c: c.priority)
+) -> List[AssignedShift]:
+    constraints = _constraints(constraints)
 
     log.info(str(config.history_metrics))
 
@@ -38,11 +42,42 @@ def solve(
     return solution
 
 
-def _run_with_retries(data, objective, constraints):
+def evaluate(
+    config: Config,
+    objective: Objective,
+    constraints: List[Constraint],
+    solution: List[AssignedShift],
+) -> None:
+    constraints = _constraints(constraints)
+    evaluation_constraint = EVALUATION_CONSTRAINT(priority=0, assigned_shifts=solution)
+
+    log.info(str(config.history_metrics))
+
+    try:
+        solver, assignments = _run(config, objective, [evaluation_constraint])
+    except Infeasible:
+        log.error("The provided output is infeasible for the solver")
+        return exit(1)
+
+    _validate_constraints_against_solution(solver, constraints, config, assignments)
+    _display_objective_function_score(solver)
+
+    solution = sorted(
+        list(_solution(solver, config, assignments)), key=lambda s: (s.day, s.name)
+    )
+    log.info("Solution\n%s", "\n".join(f">>>> {shift}" for shift in solution))
+
+
+def _constraints(constraints: List[Constraint]) -> List[Constraint]:
+    constraints = list(constraints) + FIXED_CONSTRAINTS
+    return sorted(constraints, key=lambda c: c.priority)
+
+
+def _run_with_retries(config, objective, constraints):
     log.info("Running model...")
     while True:
         try:
-            result = _run(data, objective, constraints)
+            result = _run(config, objective, constraints)
             log.info("Solution found")
             return result
         except Infeasible:
