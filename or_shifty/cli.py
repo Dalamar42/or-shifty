@@ -3,7 +3,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from or_shifty.constraints import CONSTRAINTS, Constraint
 from or_shifty.history import History, PastShiftOffset
@@ -23,7 +23,9 @@ class Inputs:
     constraints: List[Constraint]
     history: History
     verbose: bool
-    output: str
+    output_path: Optional[str]
+    evaluate: bool
+    output: Optional[List[AssignedShift]]
 
 
 def parse_args(args=None) -> Inputs:
@@ -58,6 +60,16 @@ def parse_args(args=None) -> Inputs:
         default=None,
         help="Path to file in which to write the solution",
     )
+    parser.add_argument(
+        "--evaluate",
+        dest="evaluate",
+        action="store_true",
+        default=False,
+        help="If selected then instead of running the solver, an existing solution will "
+        "be evaluated against the given config and history and the script will print "
+        "the score of the objective function and any violated constraints. When used "
+        "--output must also be provided",
+    )
 
     parsed_args = parser.parse_args(args)
 
@@ -65,18 +77,27 @@ def parse_args(args=None) -> Inputs:
         config_path=parsed_args.config,
         history_path=parsed_args.history,
         verbose=parsed_args.verbose,
-        output=parsed_args.output,
+        output_path=parsed_args.output,
+        evaluate=parsed_args.evaluate,
     )
 
 
 def _parse_inputs(
-    config_path: str, history_path: str, verbose: bool, output: str
+    config_path: str,
+    history_path: str,
+    verbose: bool,
+    output_path: Optional[str],
+    evaluate: bool,
 ) -> Inputs:
+    _validate_args(config_path, history_path, output_path, evaluate)
+
     with open(config_path, "r") as f:
         config = json.load(f)
 
     with open(history_path, "r") as f:
         history = json.load(f)
+
+    output = read_output(output_path) if evaluate else None
 
     return Inputs(
         people=_parse_people(config),
@@ -86,8 +107,26 @@ def _parse_inputs(
         constraints=_parse_constraints(config),
         history=_parse_history(history),
         verbose=verbose,
+        output_path=output_path,
+        evaluate=evaluate,
         output=output,
     )
+
+
+def _validate_args(
+    config_path: str, history_path: str, output: Optional[str], evaluate: bool,
+):
+    if config_path is None:
+        _fail("Config path must be provided")
+    if history_path is None:
+        _fail("History path must be provided")
+    if evaluate and output is None:
+        _fail("When in evaluate mode output path must be provided")
+
+
+def _fail(msg):
+    log.error(msg)
+    exit(1)
 
 
 def _parse_people(config) -> List[Person]:
@@ -141,11 +180,18 @@ def _parse_history(history) -> History:
     return History.build(past_shifts=shifts, offsets=offsets)
 
 
-def write_output(output: str, solution: List[AssignedShift]):
-    log.info("Writing solution to %s...", output)
+def read_output(output_path: str) -> List[AssignedShift]:
+    with open(output_path, "r") as f:
+        output = json.load(f)
+    shifts = [AssignedShift.from_json(shift) for shift in output["shifts"]]
+    return shifts
+
+
+def write_output(output_path: str, solution: List[AssignedShift]):
+    log.info("Writing solution to %s...", output_path)
     solution_json = {
         "shifts": [assigned_shift.to_json() for assigned_shift in solution]
     }
-    with open(output, "w") as f:
+    with open(output_path, "w") as f:
         json.dump(solution_json, f, indent=2)
     log.info("Solution written successfully")

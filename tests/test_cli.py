@@ -12,6 +12,7 @@ from or_shifty.shift import AssignedShift, Shift, ShiftType
 
 CONFIG_FILE_PATH = "tests/test_files/cli/config.json"
 HISTORY_FILE_PATH = "tests/test_files/cli/history.json"
+OUTPUT_FILE_PATH = "tests/test_files/cli/output.json"
 
 
 def test_parsing_inputs():
@@ -80,3 +81,35 @@ def test_parsing_inputs():
             shift_type=ShiftType.STANDARD,
         ),
     )
+    assert inputs.output_path is None
+    assert inputs.output is None
+
+
+def test_parsing_output():
+    inputs = parse_args(
+        [
+            "--config",
+            CONFIG_FILE_PATH,
+            "--history",
+            HISTORY_FILE_PATH,
+            "--output",
+            OUTPUT_FILE_PATH,
+            "--evaluate",
+        ]
+    )
+
+    assert inputs.output_path == OUTPUT_FILE_PATH
+    assert inputs.output == [
+        AssignedShift(
+            person=Person("Admiral Ackbar"),
+            day=date(2019, 11, 28),
+            name="ops",
+            shift_type=ShiftType.SPECIAL_A,
+        ),
+        AssignedShift(
+            person=Person("Admiral Ackbar"),
+            day=date(2019, 11, 27),
+            name="ops",
+            shift_type=ShiftType.SPECIAL_B,
+        ),
+    ]
