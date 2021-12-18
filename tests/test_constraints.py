@@ -12,6 +12,7 @@ from or_shifty.constraints import (
     EachPersonShiftIsAssignedToAtMostOneDayShift,
     EachPersonsShiftsAreFilledInOrder,
     EachPersonWorksAtMostXShiftsPerAssignmentPeriod,
+    SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod,
     PredeterminedAssignmentsConstraint,
     RespectPersonRestrictionsPerDay,
     RespectPersonRestrictionsPerShiftType,
@@ -197,6 +198,24 @@ def test_each_person_works_at_most_x_shifts_per_day(
     model, build_run_data, build_expressions
 ):
     constraint = EachPersonWorksAtMostXShiftsPerAssignmentPeriod(priority=0, x=1)
+
+    data = build_run_data()
+    assignments = init_assignments(model, data)
+    expressions = build_expressions(constraint, data, assignments)
+
+    # Each person has only one shift
+    assert evaluate(assignments, ((0, 0, 0, 0), (1, 0, 1, 0)), expressions)
+
+    # First person has been given two shifts
+    assert not evaluate(assignments, ((0, 0, 0, 0), (0, 0, 1, 0)), expressions)
+
+
+def test_specific_person_works_at_most_x_shifts_per_day(
+    model, build_run_data, build_expressions
+):
+    constraint = SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod(
+        priority=0, x=0, persons=["A"]
+    )
 
     data = build_run_data()
     assignments = init_assignments(model, data)

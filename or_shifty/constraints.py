@@ -155,6 +155,40 @@ class EachPersonWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
         return self._x == other._x
 
 
+class SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
+    def __init__(self, x=None, persons: List[str] = None, **kwargs):
+        super().__init__(**kwargs)
+        assert x is not None
+        self._x = x
+        assert persons is not None
+        self._persons = [Person(p) for p in persons]
+
+    def generate(
+        self, assignments: Dict[Idx, IntVar], data: Config
+    ) -> Generator[Tuple[LinearExpr, ConstraintImpact], None, None]:
+        assert (
+            self._x <= data.max_shifts_per_person
+        ), f"X in {self.__class__.__name__} must be <= than max_shifts_per_person"
+        for person in [
+            value for value in self._persons if value in data.shifts_by_person.keys()
+        ]:
+            yield (
+                (
+                    sum(
+                        assignments[index.idx]
+                        for index in data.indexer.iter(person_filter=person)
+                    )
+                    <= 1
+                ),
+                ConstraintImpact(person, None),
+            )
+
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        return self._x == other._x
+
+
 class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
     def __init__(self, x=None, **kwargs):
         super().__init__(**kwargs)
@@ -350,6 +384,7 @@ CONSTRAINTS = {
     constraint.__name__: constraint
     for constraint in [
         EachPersonWorksAtMostXShiftsPerAssignmentPeriod,
+        SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod,
         ThereShouldBeAtLeastXDaysBetweenOps,
         ThereShouldBeAtLeastXDaysBetweenOpsOfShiftTypes,
         RespectPersonRestrictionsPerShiftType,

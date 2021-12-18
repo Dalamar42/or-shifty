@@ -112,6 +112,20 @@ The user selected constraints are as follows:
 An assignment period is one run of the program with given input files. This constraints that a person can only be
 assigned X of these shifts.
 
+#### Specific persons works at most X shifts per assignment period
+```json
+"constraints": [
+    {
+      "type": "SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod",
+      "priority": 0,
+      "params": {"x":  1, "persons": ["Bob"]}
+    }
+]
+```
+
+An assignment period is one run of the program with given input files. This constraints that specific persons can only be
+assigned X of these shifts.
+
 #### There should be at least X days between ops
 ```json
 "constraints": [
