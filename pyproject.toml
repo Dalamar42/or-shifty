@@ -15,6 +15,7 @@ shifty = "or_shifty.app:main"
 [tool.poetry.dependencies]
 python = "^3.7"
 ortools = "^7.2"
+dateparser = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.0"
