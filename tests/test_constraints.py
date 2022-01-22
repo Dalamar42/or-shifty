@@ -220,7 +220,7 @@ def test_specific_person_works_at_most_x_shifts_per_day(
     model, build_run_data, build_expressions
 ):
     constraint = SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod(
-        priority=0, x=0, persons=["A"]
+        priority=0, x=1, persons=["A"]
     )
 
     data = build_run_data()
