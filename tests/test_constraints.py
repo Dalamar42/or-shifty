@@ -118,7 +118,7 @@ def test_each_day_shift_is_assigned_to_exactly_one_person_shift(
     # Each shift is assigned
     assert evaluate(
         assignments,
-        (
+        (  # (Person, Person_Shift, Day, Day_Shift)
             (0, 0, 0, 0),
             (0, 0, 1, 0),
             (0, 0, 2, 0),
@@ -148,7 +148,13 @@ def test_each_day_shift_is_assigned_to_exactly_one_person_shift(
     # Last shift is unassigned
     assert not evaluate(
         assignments,
-        ((0, 0, 0, 0), (0, 0, 1, 0), (0, 0, 2, 0), (0, 0, 3, 0), (0, 0, 4, 0)),
+        (
+            (0, 0, 0, 0),
+            (0, 0, 1, 0),
+            (0, 0, 2, 0),
+            (0, 0, 3, 0),
+            (0, 0, 4, 0)
+        ),
         expressions,
     )
 
@@ -166,7 +172,7 @@ def test_each_person_shift_is_assigned_to_at_most_one_day_shift(
     assert evaluate(assignments, (), expressions)
 
     # Each person shift is assigned to different day shift
-    assert evaluate(assignments, ((0, 0, 0, 0), (0, 1, 1, 0)), expressions)
+    assert evaluate(assignments, ((0, 0, 0, 0), (0, 1, 1, 0)), expressions)  # (Person, Person_Shift, Day, Day_Shift)
 
     # Same person shift is assigned to two day shifts
     assert not evaluate(assignments, ((0, 0, 0, 0), (0, 0, 1, 0)), expressions)
