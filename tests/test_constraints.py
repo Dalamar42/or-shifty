@@ -17,7 +17,7 @@ from or_shifty.constraints import (
     RespectPersonRestrictionsPerDay,
     RespectPersonRestrictionsPerShiftType,
     ThereShouldBeAtLeastXDaysBetweenOps,
-    ThereShouldBeAtLeastXDaysBetweenOpsOfShiftTypes,
+    ThereShouldBeAtLeastXDaysBetweenOpsOfShiftTypes, RespectConsecutiveShiftRequirement,
 )
 from or_shifty.history import History
 from or_shifty.model import init_assignments
@@ -64,6 +64,15 @@ def days():
         date(2019, 1, 6),  # Sun
     ]
 
+@fixture
+def days1():
+    return [
+        date(2019, 1, 5),  # Sat
+        date(2019, 1, 6),  # Sun
+        date(2019, 1, 7),
+        date(2019, 1, 8),
+    ]
+
 
 @fixture
 def shifts_per_day(days):
@@ -77,6 +86,19 @@ def shifts_per_day(days):
     shifts[days[-1]] = [
         Shift(name="shift-b", shift_type=ShiftType.SPECIAL_B, day=days[-1])
     ]
+    return shifts
+
+@fixture
+def shifts_per_day1(days1):
+    shifts = {days1[-4]: [
+        Shift(name="shift-a", shift_type=ShiftType.SPECIAL_A, day=days1[-4])
+    ], days1[-3]: [
+        Shift(name="shift-a", shift_type=ShiftType.SPECIAL_A, day=days1[-3])
+    ], days1[-2]: [
+        Shift(name="shift", shift_type=ShiftType.STANDARD, day=days1[-2])
+    ], days1[-1]: [
+        Shift(name="shift", shift_type=ShiftType.STANDARD, day=days1[-1])
+    ]}
     return shifts
 
 
@@ -93,6 +115,18 @@ def build_run_data(people, shifts_per_day):
 
     return build
 
+@fixture
+def build_run_data1(people, shifts_per_day1):
+    def build(history=History.build()):
+        run_data = Config.build(
+            people=people,
+            max_shifts_per_person=2,
+            shifts_by_day=shifts_per_day1,
+            history=history,
+        )
+        return run_data
+
+    return build
 
 @fixture
 def build_expressions(model):
@@ -367,3 +401,27 @@ def test_predetermined_assignments(
     for solution in possible_solutions:
         if set(solution) != set(only_valid_solution):
             assert not evaluate(assignments, solution, expressions)
+
+
+def test_respect_consecutive_shift_requirement(model, build_run_data1, build_expressions):
+    data = build_run_data1()
+
+    constraint = RespectConsecutiveShiftRequirement(
+        priority=0, shift_type="special_a", persons=["A"]
+    )
+
+    constraint = RespectPersonRestrictionsPerDay(
+        priority=0, restrictions={"B": ["2019-01-06"]}
+    )
+
+    assignments = init_assignments(model, data)
+    expressions = build_expressions(constraint, data, assignments)
+
+    only_valid_solution = (  # (Person, Person_Shift, Day, Day_Shift)
+        (1, 0, 0, 0),
+        (0, 0, 1, 0),
+        (0, 0, 2, 0),
+        (1, 0, 3, 0),
+    )
+    # First person is assigned consecutive days
+    assert evaluate(assignments, only_valid_solution, expressions)
