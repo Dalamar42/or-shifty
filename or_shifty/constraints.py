@@ -144,7 +144,7 @@ class EachPersonWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
                         assignments[index.idx]
                         for index in data.indexer.iter(person_filter=person)
                     )
-                    <= 1
+                    <= self._x
                 ),
                 ConstraintImpact(person, None),
             )
@@ -178,7 +178,7 @@ class SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
                         assignments[index.idx]
                         for index in data.indexer.iter(person_filter=person)
                     )
-                    <= 1
+                    <= self._x
                 ),
                 ConstraintImpact(person, None),
             )
@@ -186,7 +186,7 @@ class SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
     def __eq__(self, other):
         if not super().__eq__(other):
             return False
-        return self._x == other._x
+        return self._x == other._x and self._persons == other._persons
 
 
 class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
