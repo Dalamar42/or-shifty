@@ -1,0 +1,27 @@
+{
+  "max_shifts_per_person": 2,
+  "objective": "RankingWeight",
+  "constraints": [
+    {
+      "type": "EachPersonWorksAtMostXShiftsPerAssignmentPeriod",
+      "priority": 1,
+      "params": {"x":  1}
+    },
+    {
+      "type": "ThereShouldBeAtLeastXDaysBetweenOps",
+      "priority": 2,
+      "params": {"x":  7}
+    },
+    {
+      "type": "RespectPersonRestrictionsPerShiftType",
+      "priority": 3,
+      "params": {"forbidden_by_shift_type": {"special_a": ["Bob"]}}
+    },
+    {
+      "type": "RespectPersonRestrictionsPerDay",
+      "name": "Holidays",
+      "priority": 4,
+      "params": {"restrictions": {"Alice": ["2021-12-03"]}}
+    }
+  ]
+}
