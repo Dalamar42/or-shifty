@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from itertools import product
 from typing import Dict, Generator, List, Optional, Set, Tuple
 
@@ -144,7 +144,7 @@ class EachPersonWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
                         assignments[index.idx]
                         for index in data.indexer.iter(person_filter=person)
                     )
-                    <= 1
+                    <= self._x
                 ),
                 ConstraintImpact(person, None),
             )
@@ -153,6 +153,40 @@ class EachPersonWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
         if not super().__eq__(other):
             return False
         return self._x == other._x
+
+
+class SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod(Constraint):
+    def __init__(self, x=None, persons: List[str] = None, **kwargs):
+        super().__init__(**kwargs)
+        assert x is not None
+        self._x = x
+        assert persons is not None
+        self._persons = [Person(p) for p in persons]
+
+    def generate(
+        self, assignments: Dict[Idx, IntVar], data: Config
+    ) -> Generator[Tuple[LinearExpr, ConstraintImpact], None, None]:
+        assert (
+            self._x <= data.max_shifts_per_person
+        ), f"X in {self.__class__.__name__} must be <= than max_shifts_per_person"
+        for person in [
+            value for value in self._persons if value in data.shifts_by_person.keys()
+        ]:
+            yield (
+                (
+                    sum(
+                        assignments[index.idx]
+                        for index in data.indexer.iter(person_filter=person)
+                    )
+                    <= self._x
+                ),
+                ConstraintImpact(person, None),
+            )
+
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        return self._x == other._x and self._persons == other._persons
 
 
 class ThereShouldBeAtLeastXDaysBetweenOps(Constraint):
@@ -297,6 +331,60 @@ class RespectPersonRestrictionsPerDay(Constraint):
         return self._restrictions == other._restrictions
 
 
+class RespectConsecutiveShiftRequirement(Constraint):
+    def __init__(self, shift_type=None, persons:List[str]=None,  **kwargs):
+        super().__init__(**kwargs)
+        assert shift_type is not None
+        assert persons is not None
+        self._persons = [Person(p) for p in persons]
+        self._shift_type = {
+            ShiftType.from_json(shift_type)
+        }
+
+    def generate(
+        self, assignments: Dict[Idx, IntVar], data: Config
+    ) -> Generator[Tuple[LinearExpr, ConstraintImpact], None, None]:
+        for person, (day, day_shifts) in product(
+                [value for value in data.shifts_by_person.keys() if value in self._persons], data.shifts_by_day.items()
+        ):
+            # x = (person, day, day_shifts)
+            # for person1, (day1, day_shifts1) in product(
+            #     [value for value in data.shifts_by_person.keys() if value in self._persons], data.shifts_by_day.items()
+            # ):
+            #     if day1 != day + timedelta(days=1):
+            #         continue
+                for day_shift in day_shifts:
+                    if day_shift.shift_type not in self._shift_type:
+                        continue
+                    for index in data.indexer.iter(
+                            person_filter=person, day_filter=day
+                    ):
+                        for index1 in data.indexer.iter(
+                                person_filter=person, day_filter=day + timedelta(days=1)
+                        ):
+                            if (index.day_shift.shift_type in self._shift_type) and (
+                                    index1.day_shift.shift_type in self._shift_type):
+                                yield (
+                                    assignments[index.idx] == 1 and assignments[index1.idx] == 1,
+                                    ConstraintImpact(person, day),
+                                )
+                            # else:
+                            #     yield(
+                            #         assignments[index.idx] == 1,
+                            #         ConstraintImpact(person, day),
+                            #     )
+                # for index in data.indexer.iter():
+                #     yield (
+                #         assignments[index.idx] == 0,
+                #         ConstraintImpact(person, day),
+                #     )#TODO : Implement!!
+
+    def __eq__(self, other):
+        if not super().__eq__(other):
+            return False
+        return self._shift_type == other._shift_type and self._persons == other._persons
+
+
 class PredeterminedAssignmentsConstraint(Constraint):
     """This constraint forces the solver to a given solution
 
@@ -350,10 +438,12 @@ CONSTRAINTS = {
     constraint.__name__: constraint
     for constraint in [
         EachPersonWorksAtMostXShiftsPerAssignmentPeriod,
+        SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod,
         ThereShouldBeAtLeastXDaysBetweenOps,
         ThereShouldBeAtLeastXDaysBetweenOpsOfShiftTypes,
         RespectPersonRestrictionsPerShiftType,
         RespectPersonRestrictionsPerDay,
+        RespectConsecutiveShiftRequirement,
     ]
 }
 

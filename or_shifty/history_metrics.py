@@ -76,20 +76,25 @@ class HistoryMetrics:
 
     def __str__(self):
         formatted = "Pre-allocation history metrics:\n"
-        formatted += "{: <20}{: <15}{: <15}{: <15}{: <15}\n".format(
-            "Name", "Standard", "Special A", "Special B", "Last on"
+        formatted += "{: <20}{: <15}{: <15}{: <15}{: <15}{: <15}{: <15}\n".format(
+            "Name", "Standard", "Last on", "Special A", "Last on", "Special B", "Last on"
         )
-
-        for person in self.date_last_on_shift.keys():
+        sorted_last_on_shift = dict(sorted(self.date_last_on_shift.items(), key=lambda x: x[0].name))
+        for person in sorted_last_on_shift.keys():
             if len(person.name) > 16:
                 formatted += f"{person.name[:16] + '...': <20}"
             else:
                 formatted += f"{person.name: <20}"
 
             formatted += f"{self.num_of_shifts[ShiftType.STANDARD][person]: <15}"
+            days = (self.date_last_on_shift_of_type[person][ShiftType.STANDARD] - self.now).days
+            formatted += f"{'Never' if days < -15000 else days: <15}"
             formatted += f"{self.num_of_shifts[ShiftType.SPECIAL_A][person]: <15}"
+            days = (self.date_last_on_shift_of_type[person][ShiftType.SPECIAL_A] - self.now).days
+            formatted += f"{'Never' if days < -15000 else days: <15}"
             formatted += f"{self.num_of_shifts[ShiftType.SPECIAL_B][person]: <15}"
-            formatted += f"{(self.date_last_on_shift[person] - self.now).days: <15}"
+            days = (self.date_last_on_shift_of_type[person][ShiftType.SPECIAL_B] - self.now).days
+            formatted += f"{'Never' if days < -15000 else days: <15}"
 
             formatted += "\n"
         return formatted

@@ -1,0 +1,234 @@
+{
+    "shifts": [
+        {
+            "day": "2022-02-01",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-02",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-03",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-04",
+            "name": "ops",
+            "type": "special_a"
+        },
+        {
+            "day": "2022-02-05",
+            "name": "ops",
+            "type": "special_a"
+        },
+        {
+            "day": "2022-02-06",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-07",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-08",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-09",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-10",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-11",
+            "name": "ops",
+            "type": "special_a"
+        },
+        {
+            "day": "2022-02-12",
+            "name": "ops",
+            "type": "special_a"
+        },
+        {
+            "day": "2022-02-13",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-14",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-15",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-16",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-17",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-18",
+            "name": "ops",
+            "type": "special_a"
+        },
+        {
+            "day": "2022-02-19",
+            "name": "ops",
+            "type": "special_a"
+        },
+        {
+            "day": "2022-02-20",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-21",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-22",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-23",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-24",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-25",
+            "name": "ops",
+            "type": "special_a"
+        },
+        {
+            "day": "2022-02-26",
+            "name": "ops",
+            "type": "special_a"
+        },
+        {
+            "day": "2022-02-27",
+            "name": "ops",
+            "type": "standard"
+        },
+        {
+            "day": "2022-02-28",
+            "name": "ops",
+            "type": "standard"
+        }
+    ],
+    "people": [
+        {
+            "name": "Person1"
+        },
+        {
+            "name": "Person2"
+        },
+        {
+            "name": "Person3"
+        },
+        {
+            "name": "Person4"
+        },
+        {
+            "name": "Person5"
+        },
+        {
+            "name": "Person6"
+        },
+        {
+            "name": "Person7"
+        },
+        {
+            "name": "Person8"
+        },
+        {
+            "name": "Person9"
+        },
+        {
+            "name": "Person10"
+        },
+        {
+            "name": "Person11"
+        }
+    ],
+    "constraints": [
+        {
+            "type": "RespectPersonRestrictionsPerShiftType",
+            "priority": 0,
+            "name": "Students - Weekends Only",
+            "params": {
+                "forbidden_by_shift_type": {
+                    "standard": [
+                        "Person1"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "SpecificPersonsWorksAtMostXShiftsPerAssignmentPeriod",
+            "priority": 0,
+            "name": "At most once a month",
+            "params": {
+                "x": 1,
+                "persons": [
+                    "Person2"
+                ]
+            }
+        },
+        {
+            "type": "RespectConsecutiveShiftRequirement",
+            "priority": 1,
+            "name": "Religious",
+            "params": {
+                "shift_type": "special_a",
+                "persons": [
+                    "Person3",
+                    "Person4"
+                ]
+            }
+        },
+        {
+            "type": "EachPersonWorksAtMostXShiftsPerAssignmentPeriod",
+            "priority": 2,
+            "name": "At most two shifts a month",
+            "params": {
+                "x": 1
+            }
+        },
+        {
+            "type": "ThereShouldBeAtLeastXDaysBetweenOps",
+            "priority": 3,
+            "name": "Minimum days between shifts",
+            "params": {
+                "x": 7
+            }
+        }
+    ],
+    "max_shifts_per_person": 2,
+    "objective": "RankingWeight"
+}
