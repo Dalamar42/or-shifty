@@ -1,0 +1,1 @@
+shifty --config examples\dutyofficer\config.json --history examples\dutyofficer\history.json
